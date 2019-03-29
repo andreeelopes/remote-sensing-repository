@@ -14,14 +14,14 @@ lazy val global = project
 
 lazy val indexer = project
   .settings(
-    name := "indexer",
+    name := "indexer-app",
     settings,
     libraryDependencies ++= commonDependencies ++ Seq()
   )
 
 lazy val ingestion = project
   .settings(
-    name := "ingestion",
+    name := "ingestion-app",
     settings,
     assemblySettings,
     libraryDependencies ++= commonDependencies ++ Seq()
