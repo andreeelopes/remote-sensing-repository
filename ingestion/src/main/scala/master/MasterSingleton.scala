@@ -7,7 +7,7 @@ import scala.concurrent.duration._
 
 object MasterSingleton {
 
-  private val singletonName = "src/main/scala/master"
+  private val singletonName = "master"
   private val singletonRole = "back-end"
 
   // #singleton
