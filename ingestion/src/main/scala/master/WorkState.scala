@@ -37,29 +37,29 @@ case class WorkState private (
   def isDone(workId: String): Boolean = doneWorkIds.contains(workId)
 
   def updated(event: WorkDomainEvent): WorkState = event match {
-    case WorkAccepted(work) ⇒
+    case WorkAccepted(work) =>
       copy(
         pendingWork = pendingWork enqueue work,
         acceptedWorkIds = acceptedWorkIds + work.workId)
 
-    case WorkStarted(workId) ⇒
+    case WorkStarted(workId) =>
       val (work, rest) = pendingWork.dequeue
       require(workId == work.workId, s"WorkStarted expected workId $workId == ${work.workId}")
       copy(
         pendingWork = rest,
         workInProgress = workInProgress + (workId -> work))
 
-    case WorkCompleted(workId, result) ⇒
+    case WorkCompleted(workId, result) =>
       copy(
         workInProgress = workInProgress - workId,
         doneWorkIds = doneWorkIds + workId)
 
-    case WorkerFailed(workId) ⇒
+    case WorkerFailed(workId) =>
       copy(
         pendingWork = pendingWork enqueue workInProgress(workId),
         workInProgress = workInProgress - workId)
 
-    case WorkerTimedOut(workId) ⇒
+    case WorkerTimedOut(workId) =>
       copy(
         pendingWork = pendingWork enqueue workInProgress(workId),
         workInProgress = workInProgress - workId)

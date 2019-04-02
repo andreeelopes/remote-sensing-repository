@@ -31,6 +31,7 @@ class Orchestrator extends Actor with ActorLogging {
   import context._
 
   implicit val scheduler = context.system.scheduler
+  val config = context.system.settings.config
 
   val masterProxy = context.actorOf(
     MasterSingleton.proxyProps(context.system),
@@ -38,7 +39,9 @@ class Orchestrator extends Actor with ActorLogging {
 
   var workCounter = 0
 
-  val copernicus = new CopernicusSource
+  val copernicus = new CopernicusSource(config)
+  Source.scheduleOnce(ProduceWork(copernicus.generateWork()))
+
 
   def receive = {
 

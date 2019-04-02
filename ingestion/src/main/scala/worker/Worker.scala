@@ -48,7 +48,7 @@ class Worker(masterProxy: ActorRef)
 
     case work: Work =>
       log.info("Got work: {}", work.workId)
-      currentWorkId = Some(workId)
+      currentWorkId = Some(work.workId)
       workExecutor ! WorkExecutor.DoWork(work)
       context.become(working)
 

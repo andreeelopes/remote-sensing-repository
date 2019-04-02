@@ -1,6 +1,7 @@
 package sources
 
-import akka.actor.{ActorContext, ActorRef, Scheduler}
+import akka.actor.{ActorRef, Scheduler}
+import com.typesafe.config.Config
 import commons.Work
 import scheduler.Orchestrator.{ProduceWork, Retry, TriggerMsg}
 
@@ -23,25 +24,16 @@ object Source {
 }
 
 
-abstract class Source(configName: String)(implicit context: ActorContext) {
+//@SerialVersionUID(2L)
+class Source(configName: String, config: Config)  extends Serializable {
 
-  import Source._
+  val fetchingFrequency = config.getDuration(s"$configName.fetching-frequency").getSeconds.seconds
+  val retryFrequency = config.getDuration(s"$configName.retry-frequency").getSeconds.seconds
+  val timeout = config.getDuration(s"$configName.timeout").getSeconds.seconds
 
-  val system = context.system
-  implicit val scheduler = system.scheduler
-  implicit val self = context.self
+  val url = config.getString(s"$configName.url")
 
-  val conf = system.settings.config
-
-  val fetchingFrequency = conf.getDuration(s"$configName.fetching-frequency").getSeconds.seconds
-  val retryFrequency = conf.getDuration(s"$configName.retry-frequency").getSeconds.seconds
-  val timeout = conf.getDuration(s"$configName.timeout").getSeconds.seconds
-
-  val url = conf.getString(s"$configName.url")
-
-  scheduleOnce(ProduceWork(new CopernicusWork(this)))
-
-  def generateWork(): Work
+  def generateWork() = new Work(this)
 
 }
 

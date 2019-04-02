@@ -1,5 +1,5 @@
 name := "rs-repo"
-organization in ThisBuild := "fct.unl.dissertation.rs-repo"
+organization in ThisBuild := "fct.unl"
 scalaVersion in ThisBuild := "2.12.7"
 
 // PROJECTS

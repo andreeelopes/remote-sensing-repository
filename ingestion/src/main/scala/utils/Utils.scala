@@ -6,5 +6,4 @@ object Utils {
 
   def generateWorkId(): String = UUID.randomUUID().toString
 
-
 }

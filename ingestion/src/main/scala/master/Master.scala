@@ -3,6 +3,7 @@ package master
 import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
+import akka.stream.ActorMaterializer
 import commons.{Work, WorkResult}
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
@@ -153,6 +154,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
 
     // #persisting
     case work: Work =>
+
       // idempotent
       if (workState.isAccepted(work.workId)) {
         sender() ! Master.Ack(work)
