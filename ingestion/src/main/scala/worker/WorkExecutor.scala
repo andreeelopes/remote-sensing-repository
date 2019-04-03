@@ -27,7 +27,9 @@ class WorkExecutor extends Actor with ActorLogging {
 
 
   def receive = {
-    case DoWork(work) => work.execute
+    case DoWork(work) =>
+      work.execute
+
   }
 
 

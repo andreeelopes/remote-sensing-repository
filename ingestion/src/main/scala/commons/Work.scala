@@ -44,18 +44,18 @@ class Work(src: Source) extends Serializable {
           case Success(value) =>
 
             val xmlElem = scala.xml.XML.loadString(value)
-            //
-            //              val lastEndpoint2 = (xmlElem \ "_").filter(node => node.attribute("rel")
-            //                .exists(rel => rel.text.equals("last")))
-            //
-            //
-            //              log.info(lastEndpoint2.toString())
+
+            val links = xmlElem.child.filter(node => node.label.equals("link"))
+            val link = links.filter(node => (node \@ "rel").equals("next")).head
+            val next = link \@ "href"
+
 
             new PrintWriter(s"metadata$workId.xml") {
               try write(value) finally close()
             }
 
-            origSender ! WorkComplete("lala")
+            origSender ! WorkComplete(next)
+
 
           case Failure(e) => // log.info(e.getMessage)
         }
