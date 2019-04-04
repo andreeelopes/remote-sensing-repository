@@ -24,7 +24,6 @@ object Source {
 }
 
 
-//@SerialVersionUID(2L)
 class Source(configName: String, config: Config)  extends Serializable {
 
   val fetchingFrequency = config.getDuration(s"$configName.fetching-frequency").getSeconds.seconds
@@ -32,6 +31,9 @@ class Source(configName: String, config: Config)  extends Serializable {
   val timeout = config.getDuration(s"$configName.timeout").getSeconds.seconds
 
   val url = config.getString(s"$configName.url")
+
+  val username = config.getString(s"$configName.credentials.username")
+  val password = config.getString(s"$configName.credentials.pwd")
 
   def generateWork() = new Work(this)
 
