@@ -56,6 +56,9 @@ lazy val dependencies =
     val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
     val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     val commonsIO = "commons-io" % "commons-io" % "2.4" % "test"
+    
+    val jodaTime = "joda-time" % "joda-time" % "2.10.1"
+
   }
 
 lazy val commonDependencies = Seq(
@@ -70,7 +73,8 @@ lazy val commonDependencies = Seq(
   dependencies.lockbackClassid,
   dependencies.akkaTestkit,
   dependencies.scalaTest,
-  dependencies.commonsIO
+  dependencies.commonsIO,
+  dependencies.jodaTime
 )
 
 // SETTINGS

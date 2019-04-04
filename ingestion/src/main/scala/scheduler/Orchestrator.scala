@@ -7,6 +7,7 @@ import akka.util.Timeout
 import commons.Work
 import master.{Master, MasterSingleton}
 import sources.{CopernicusSource, Source}
+import scala.concurrent.duration._
 
 
 object Orchestrator {
@@ -40,7 +41,7 @@ class Orchestrator extends Actor with ActorLogging {
   var workCounter = 0
 
   val copernicus = new CopernicusSource(config)
-  Source.scheduleOnce(ProduceWork(copernicus.generateWork()))
+  scheduler.scheduleOnce(30 seconds, self, ProduceWork(copernicus.generateWork())) //TODO put config
 
 
   def receive = {
