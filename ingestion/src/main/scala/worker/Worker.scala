@@ -55,18 +55,18 @@ class Worker(masterProxy: ActorRef)
   }
 
   def working: Receive = {
-    case WorkExecutor.WorkComplete(result) =>
-      log.info("commons.Work is complete. Result {}.", result)
-      masterProxy ! WorkIsDone(workerId, workId, result)
+    case WorkExecutor.WorkComplete(nextWork) =>
+      log.info("Work is complete. Exists more work? {}.", nextWork)
+      masterProxy ! WorkIsDone(workerId, workId, nextWork)
       context.setReceiveTimeout(5.seconds)
-      context.become(waitForWorkIsDoneAck(result))
+      context.become(waitForWorkIsDoneAck(nextWork))
 
     case _: Work =>
       log.warning("Yikes. Master told me to do work, while I'm already working.")
 
   }
 
-  def waitForWorkIsDoneAck(result: Any): Receive = {
+  def waitForWorkIsDoneAck(nextWork: List[Work]): Receive = {
     case Ack(id) if id == workId =>
       masterProxy ! WorkerRequestsWork(workerId)
       context.setReceiveTimeout(Duration.Undefined)
@@ -74,7 +74,7 @@ class Worker(masterProxy: ActorRef)
 
     case ReceiveTimeout =>
       log.info("No ack from master, resending work result")
-      masterProxy ! WorkIsDone(workerId, workId, result)
+      masterProxy ! WorkIsDone(workerId, workId, nextWork)
 
   }
 

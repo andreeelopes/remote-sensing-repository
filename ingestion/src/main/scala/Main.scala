@@ -51,6 +51,10 @@ object Main {
     // two worker nodes with two worker actors each
     startWorker(5001, 2, 2)
     startWorker(5002, 2, 2)
+    startWorker(5003, 2, 2)
+    startWorker(5004, 2, 2)
+    startWorker(5005, 2, 2)
+    startWorker(5006, 2, 2)
   }
 
   /**

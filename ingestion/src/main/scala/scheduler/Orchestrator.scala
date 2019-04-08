@@ -41,8 +41,7 @@ class Orchestrator extends Actor with ActorLogging {
   var workCounter = 0
 
   val copernicus = new CopernicusSource(config)
-  scheduler.scheduleOnce(30 seconds, self, ProduceWork(copernicus.generateWork())) //TODO put config
-
+  Source.start(copernicus)
 
   def receive = {
 
@@ -53,7 +52,9 @@ class Orchestrator extends Actor with ActorLogging {
 
     case Master.Ack(work) =>
       log.info("Got ack for workId {}", work.workId)
-      Source.scheduleOnce(ProduceWork(work.source.generateWork()))
+
+      if (!work.isEpoch)
+        Source.scheduleOnce(ProduceWork(work.source.generateWork(work)))
 
     case NotOk(work) =>
       log.info("commons.Work {} not accepted, retry after a while", work.workId)

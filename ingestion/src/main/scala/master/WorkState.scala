@@ -1,6 +1,6 @@
 package master
 
-import commons.Work
+import commons.{KryoSerializable, Work}
 
 import scala.collection.immutable.Queue
 
@@ -12,7 +12,7 @@ object WorkState {
     acceptedWorkIds = Set.empty,
     doneWorkIds = Set.empty)
 
-  trait WorkDomainEvent
+  trait WorkDomainEvent extends KryoSerializable
   // #events
   case class WorkAccepted(work: Work) extends WorkDomainEvent
   case class WorkStarted(workId: String) extends WorkDomainEvent

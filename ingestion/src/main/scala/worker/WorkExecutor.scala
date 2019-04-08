@@ -2,7 +2,7 @@ package worker
 
 
 import akka.actor.{Actor, ActorLogging, Props}
-import commons.Work
+import commons.{KryoSerializable, Work}
 import akka.stream.ActorMaterializer
 
 
@@ -13,9 +13,9 @@ import akka.stream.ActorMaterializer
 object WorkExecutor {
   def props = Props(new WorkExecutor)
 
-  case class DoWork(work: Work)
+  case class DoWork(work: Work) extends KryoSerializable
 
-  case class WorkComplete(result: String)
+  case class WorkComplete(nextWork: List[Work]) extends KryoSerializable
 
 }
 

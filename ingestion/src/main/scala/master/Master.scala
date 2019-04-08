@@ -4,7 +4,7 @@ import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import akka.stream.ActorMaterializer
-import commons.{Work, WorkResult}
+import commons.{KryoSerializable, Work, WorkResult}
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
@@ -18,7 +18,7 @@ object Master {
   def props(workTimeout: FiniteDuration): Props =
     Props(new Master(workTimeout))
 
-  case class Ack(work: Work)
+  case class Ack(work: Work) extends KryoSerializable
 
   private sealed trait WorkerStatus
 
@@ -27,6 +27,7 @@ object Master {
   private case class Busy(workId: String, deadline: Deadline) extends WorkerStatus
 
   private case class WorkerState(ref: ActorRef, status: WorkerStatus, staleWorkerDeadline: Deadline)
+    extends KryoSerializable
 
   private case object CleanupTick
 
@@ -124,7 +125,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
         }
       }
 
-    case MasterWorkerProtocol.WorkIsDone(workerId, workId, result) =>
+    case MasterWorkerProtocol.WorkIsDone(workerId, workId, nextWork) =>
       // idempotent - redelivery from the worker may cause duplicates, so it needs to be
       if (workState.isDone(workId)) {
         // previous Ack was lost, confirm again that this is done
@@ -134,11 +135,14 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
       } else {
         log.info("commons.Work {} is done by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)
-        persist(WorkCompleted(workId, result)) { event ⇒
+        persist(WorkCompleted(workId, nextWork)) { event ⇒
           workState = workState.updated(event)
-          mediator ! DistributedPubSubMediator.Publish(ResultsTopic, WorkResult(workId, result))
+          //          mediator ! DistributedPubSubMediator.Publish(ResultsTopic, WorkResult(workId, nextWork)) // TODO remove
           // Ack back to original sender
           sender ! MasterWorkerProtocol.Ack(workId)
+
+          nextWork.foreach(work => self ! work) // recursive work
+
         }
       }
 
@@ -168,6 +172,9 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
         }
       }
     // #persisting
+
+    case Ack(work) => log.info("Recursive work acked: {}", work.workId)
+
 
     // #pruning
     case CleanupTick =>

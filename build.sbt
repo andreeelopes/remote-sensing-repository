@@ -59,6 +59,9 @@ lazy val dependencies =
     
     val jodaTime = "joda-time" % "joda-time" % "2.10.1"
 
+    val kryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.5.1"
+
+
   }
 
 lazy val commonDependencies = Seq(
@@ -74,7 +77,8 @@ lazy val commonDependencies = Seq(
   dependencies.akkaTestkit,
   dependencies.scalaTest,
   dependencies.commonsIO,
-  dependencies.jodaTime
+  dependencies.jodaTime,
+  dependencies.kryo
 )
 
 // SETTINGS
