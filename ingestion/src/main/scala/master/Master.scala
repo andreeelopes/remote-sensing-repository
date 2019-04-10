@@ -1,10 +1,8 @@
 package master
 
 import akka.actor.{ActorLogging, ActorRef, Props, Timers}
-import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import akka.stream.ActorMaterializer
-import commons.{KryoSerializable, Work, WorkResult}
+import commons.{KryoSerializable, Work}
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
@@ -47,7 +45,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
 
   timers.startPeriodicTimer("cleanup", CleanupTick, workTimeout / 2)
 
-  val mediator: ActorRef = DistributedPubSub(context.system).mediator
+  //  val mediator: ActorRef = DistributedPubSub(context.system).mediator
 
   // the set of available workers is not event sourced as it depends on the current set of workers
   private var workers = Map[String, WorkerState]()
@@ -131,24 +129,26 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
         // previous Ack was lost, confirm again that this is done
         sender() ! MasterWorkerProtocol.Ack(workId)
       } else if (!workState.isInProgress(workId)) {
-        log.info("commons.Work {} not in progress, reported as done by worker {}", workId, workerId)
+        log.info("Work {} not in progress, reported as done by worker {}", workId, workerId)
+        changeWorkerToIdle(workerId, workId)
+        sender ! MasterWorkerProtocol.Ack(workId)
+        //TODO possible duplication of work
       } else {
-        log.info("commons.Work {} is done by worker {}", workId, workerId)
+        log.info("Work {} is done by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)
         persist(WorkCompleted(workId, nextWork)) { event ⇒
           workState = workState.updated(event)
           //          mediator ! DistributedPubSubMediator.Publish(ResultsTopic, WorkResult(workId, nextWork)) // TODO remove
           // Ack back to original sender
           sender ! MasterWorkerProtocol.Ack(workId)
-
           nextWork.foreach(work => self ! work) // recursive work
-
         }
+
       }
 
     case MasterWorkerProtocol.WorkFailed(workerId, workId) =>
       if (workState.isInProgress(workId)) {
-        log.info("commons.Work {} failed by worker {}", workId, workerId)
+        log.info("Work {} failed by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)
         persist(WorkerFailed(workId)) { event ⇒
           workState = workState.updated(event)
@@ -180,13 +180,13 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
     case CleanupTick =>
       workers.foreach {
         case (workerId, WorkerState(_, Busy(workId, timeout), _)) if timeout.isOverdue() =>
-          log.info("commons.Work timed out: {}", workId)
+          log.info("Work timed out: {}", workId)
+
           workers -= workerId
           persist(WorkerTimedOut(workId)) { event ⇒
             workState = workState.updated(event)
             notifyWorkers()
           }
-
 
         case (workerId, WorkerState(_, Idle, lastHeardFrom)) if lastHeardFrom.isOverdue() =>
           log.info("Too long since heard from worker {}, pruning", workerId)

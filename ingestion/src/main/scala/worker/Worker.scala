@@ -68,14 +68,13 @@ class Worker(masterProxy: ActorRef)
 
   def waitForWorkIsDoneAck(nextWork: List[Work]): Receive = {
     case Ack(id) if id == workId =>
-      masterProxy ! WorkerRequestsWork(workerId)
-      context.setReceiveTimeout(Duration.Undefined)
-      context.become(idle)
+    masterProxy ! WorkerRequestsWork(workerId)
+    context.setReceiveTimeout(Duration.Undefined)
+    context.become(idle)
 
     case ReceiveTimeout =>
       log.info("No ack from master, resending work result")
       masterProxy ! WorkIsDone(workerId, workId, nextWork)
-
   }
 
   def createWorkExecutor(): ActorRef =

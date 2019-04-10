@@ -25,7 +25,7 @@ class CopernicusSource(config: Config) extends Source("copernicusOAH", config) {
   override val epochInitialWork = new CopernicusWork(this, ingestionHistoryDates, isEpoch = true)
 
 
-  override def generateQuery(pageStart: Int, ingestionDates: (DateTime, DateTime)) = {
+  override def generateQuery(pageStart: Int, ingestionDates: (DateTime, DateTime)) = { //order by new to old
     s"${baseUrl}start=$pageStart&rows=$pageSize&q=ingestiondate:" +
       s"[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]"
   }

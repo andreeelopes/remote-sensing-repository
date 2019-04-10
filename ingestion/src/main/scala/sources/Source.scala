@@ -39,7 +39,7 @@ class Source(configName: String, config: Config) extends KryoSerializable {
 
   val fetchingFrequency = config.getDuration(s"$configName.fetching-frequency").getSeconds.seconds
   val retryFrequency = config.getDuration(s"$configName.retry-frequency").getSeconds.seconds
-  val timeout = config.getDuration(s"$configName.timeout").getSeconds.seconds
+  val retryTimeout = config.getDuration(s"$configName.retry-timeout").getSeconds.seconds
   val startDelay = config.getDuration(s"$configName.start-delay").getSeconds.seconds
   val epoch = config.getString(s"$configName.epoch").toInt
 

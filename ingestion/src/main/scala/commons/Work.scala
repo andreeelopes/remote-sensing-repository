@@ -21,10 +21,10 @@ class Work(val source: Source, val ingestionDates: (DateTime, DateTime), val isE
            val pageStart: Int = 0) extends KryoSerializable {
 
 
-  println(s"Starting to fetch: $url")
-
   val workId = Utils.generateWorkId()
   val url = source.generateQuery(pageStart, ingestionDates)
+
+  println(s"Starting to fetch: $url") // TODO logs
 
   def execute(implicit context: ActorContext, actorMat: ActorMaterializer) = {
 
