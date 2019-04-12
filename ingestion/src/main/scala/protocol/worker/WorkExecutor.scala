@@ -1,8 +1,7 @@
-package worker
-
+package protocol.worker
 
 import akka.actor.{Actor, ActorLogging, Props}
-import commons.{KryoSerializable, Work}
+import work.{KryoSerializable, Work}
 import akka.stream.ActorMaterializer
 
 
@@ -27,9 +26,7 @@ class WorkExecutor extends Actor with ActorLogging {
 
 
   def receive = {
-    case DoWork(work) =>
-      work.execute
-
+    case DoWork(work) => work.execute
   }
 
 

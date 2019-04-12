@@ -1,6 +1,6 @@
-package master
+package protocol.master
 
-import commons.{KryoSerializable, Work}
+import work.{KryoSerializable, Work}
 
 object MasterWorkerProtocol {
   // Messages from Workers

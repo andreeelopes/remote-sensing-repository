@@ -1,9 +1,9 @@
-package scheduler
+package protocol.scheduler
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
-import commons.WorkResult
-import master.Master
+import work.WorkResult
+import protocol.master.Master
 
 object WorkResultConsumer {
   def props: Props = Props(new WorkResultConsumer)

@@ -8,10 +8,10 @@ import akka.http.scaladsl.model.{HttpResponse, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
-import commons.Work
+import work.Work
 import org.joda.time.DateTime
+import protocol.worker.WorkExecutor.WorkComplete
 import utils.Utils._
-import worker.WorkExecutor.WorkComplete
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -20,18 +20,18 @@ import scala.xml.XML
 
 class CopernicusSource(config: Config) extends Source("copernicusOAH", config) {
 
-  override val initialWork = new CopernicusWork(this, initialIngestion)
+  val initialWork = new CopernicusWork(this, initialIngestion)
 
-  override val epochInitialWork = new CopernicusWork(this, ingestionHistoryDates, isEpoch = true)
+  val epochInitialWork = new CopernicusWork(this, ingestionHistoryDates, isEpoch = true)
 
 
-  override def generateQuery(pageStart: Int, ingestionDates: (DateTime, DateTime)) = { //order by new to old
+  def generateQuery(pageStart: Int, ingestionDates: (DateTime, DateTime)) = { //order by new to old
     s"${baseUrl}start=$pageStart&rows=$pageSize&q=ingestiondate:" +
       s"[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]"
   }
 
 
-  override def generateWork(prevWork: Work, isRecursive: Boolean = false) = {
+  def generateWork(prevWork: Work, isRecursive: Boolean = false) = {
     if (isRecursive)
       new CopernicusWork(prevWork.source, prevWork.ingestionDates, prevWork.isEpoch, prevWork.pageStart + pageSize)
     else {
@@ -50,7 +50,7 @@ class CopernicusWork(override val source: Source,
                      override val pageStart: Int = 0)
   extends Work(source, ingestionDates, isEpoch, pageStart) {
 
-  override def unmarshal(response: HttpResponse)(implicit actorMat: ActorMaterializer, origSender: ActorRef) = {
+  def unmarshal(response: HttpResponse)(implicit actorMat: ActorMaterializer, origSender: ActorRef) = {
 
     Unmarshal(response.entity).to[String].onComplete {
 
@@ -70,9 +70,9 @@ class CopernicusWork(override val source: Source,
   }
 
 
-  override def preProcess(metadata: String) = metadata
+  def preProcess(metadata: String) = metadata
 
-  override def getNext(metadata: String): List[Work] = {
+  def getNext(metadata: String): List[Work] = {
     var workToBeDone = List[Work]()
 
     val xmlElem = XML.loadString(metadata)

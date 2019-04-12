@@ -1,9 +1,10 @@
-package master
+package protocol.master
 
 import akka.actor.{ActorSystem, PoisonPill}
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
 
 import scala.concurrent.duration._
+
 
 object MasterSingleton {
 
@@ -12,7 +13,7 @@ object MasterSingleton {
 
   // #singleton
   def startSingleton(system: ActorSystem) = {
-    val workTimeout = system.settings.config.getDuration("distributed-workers.work-timeout").getSeconds.seconds
+    val workTimeout = system.settings.config.getDuration("distributed-workers.clean-up-timeout").getSeconds.seconds
 
     system.actorOf(
       ClusterSingletonManager.props(

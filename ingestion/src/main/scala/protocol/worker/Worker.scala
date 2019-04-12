@@ -1,10 +1,11 @@
-package worker
+package protocol.worker
 
 import java.util.UUID
 
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import akka.actor._
-import commons.Work
+import protocol.master.MasterWorkerProtocol.{Ack, DeRegisterWorker, RegisterWorker, WorkFailed, WorkIsDone, WorkIsReady, WorkerRequestsWork}
+import work.Work
 
 import scala.concurrent.duration._
 
@@ -21,7 +22,6 @@ object Worker {
 class Worker(masterProxy: ActorRef)
   extends Actor with Timers with ActorLogging {
 
-  import master.MasterWorkerProtocol._
   import context.dispatcher
 
 

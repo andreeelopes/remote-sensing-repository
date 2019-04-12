@@ -1,4 +1,4 @@
-package commons
+package work
 
 import akka.actor.{ActorContext, ActorRef}
 import akka.http.scaladsl.Http
@@ -17,7 +17,7 @@ case class WorkResult(workId: String, result: Any)
 
 trait KryoSerializable
 
-class Work(val source: Source, val ingestionDates: (DateTime, DateTime), val isEpoch: Boolean = false,
+abstract class Work(val source: Source, val ingestionDates: (DateTime, DateTime), val isEpoch: Boolean = false,
            val pageStart: Int = 0) extends KryoSerializable {
 
 
@@ -44,11 +44,11 @@ class Work(val source: Source, val ingestionDates: (DateTime, DateTime), val isE
 
 
 
-  def unmarshal(response: HttpResponse)(implicit actorMat: ActorMaterializer, origSender: ActorRef) = {}
+  def unmarshal(response: HttpResponse)(implicit actorMat: ActorMaterializer, origSender: ActorRef)
 
-  def preProcess(metadata: String): String = metadata
+  def preProcess(metadata: String): String
 
-  def getNext(metadata: String): List[Work] = List()
+  def getNext(metadata: String): List[Work]
 
 
 }

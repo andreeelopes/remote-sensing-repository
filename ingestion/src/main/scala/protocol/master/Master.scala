@@ -1,8 +1,8 @@
-package master
+package protocol.master
 
 import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import commons.{KryoSerializable, Work}
+import work.{KryoSerializable, Work}
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
@@ -13,8 +13,8 @@ object Master {
 
   val ResultsTopic = "results"
 
-  def props(workTimeout: FiniteDuration): Props =
-    Props(new Master(workTimeout))
+  def props(cleanupTimeout: FiniteDuration): Props =
+    Props(new Master(cleanupTimeout))
 
   case class Ack(work: Work) extends KryoSerializable
 
@@ -31,7 +31,7 @@ object Master {
 
 }
 
-class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor with ActorLogging {
+class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor with ActorLogging {
 
   import Master._
   import WorkState._
@@ -43,7 +43,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
 
   def newStaleWorkerDeadline(): Deadline = considerWorkerDeadAfter.fromNow
 
-  timers.startPeriodicTimer("cleanup", CleanupTick, workTimeout / 2)
+  timers.startPeriodicTimer("cleanup", CleanupTick, cleanupTimeout)
 
   //  val mediator: ActorRef = DistributedPubSub(context.system).mediator
 
@@ -114,7 +114,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
               workState = workState.updated(event)
               log.info("Giving worker {} some work {}", workerId, work.workId)
               val newWorkerState = workerState.copy(
-                status = Busy(work.workId, Deadline.now + workTimeout),
+                status = Busy(work.workId, Deadline.now + work.source.workTimeout),
                 staleWorkerDeadline = newStaleWorkerDeadline())
               workers += (workerId -> newWorkerState)
               sender() ! work

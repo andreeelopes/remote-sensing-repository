@@ -5,10 +5,10 @@ import java.util.concurrent.CountDownLatch
 
 import akka.actor.ActorSystem
 import akka.persistence.cassandra.testkit.CassandraLauncher
-import scheduler.{Orchestrator, WorkResultConsumer}
+import protocol.scheduler.{Orchestrator, WorkResultConsumer}
 import com.typesafe.config.{Config, ConfigFactory}
-import master.MasterSingleton
-import worker.Worker
+import protocol.master.MasterSingleton
+import protocol.worker.Worker
 
 
 object Main {

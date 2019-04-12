@@ -1,6 +1,6 @@
-package master
+package protocol.master
 
-import commons.{KryoSerializable, Work}
+import work.{KryoSerializable, Work}
 
 import scala.collection.immutable.Queue
 
