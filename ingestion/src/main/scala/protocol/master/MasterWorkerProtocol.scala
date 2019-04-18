@@ -1,6 +1,7 @@
 package protocol.master
 
-import work.{KryoSerializable, Work}
+import sources.Work
+import utils.KryoSerializable
 
 object MasterWorkerProtocol {
   // Messages from Workers

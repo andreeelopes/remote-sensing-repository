@@ -1,8 +1,9 @@
 package protocol.worker
 
 import akka.actor.{Actor, ActorLogging, Props}
-import work.{KryoSerializable, Work}
 import akka.stream.ActorMaterializer
+import sources.Work
+import utils.KryoSerializable
 
 
 /**

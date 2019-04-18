@@ -3,15 +3,16 @@ package protocol.scheduler
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import work.Work
 import protocol.master.{Master, MasterSingleton}
-import sources.{CopernicusSource, Source}
-
+import sources.web.metadata.{CopernicusOAHSource, RESTWork}
+import sources.{PeriodicSource, Work}
 
 object Orchestrator {
 
   def props: Props = Props(new Orchestrator)
+
 
   trait TriggerMsg {
     val work: Work
@@ -32,57 +33,34 @@ class Orchestrator extends Actor with ActorLogging {
 
   implicit val scheduler = context.system.scheduler
   val config = context.system.settings.config
+  implicit val mat = ActorMaterializer()(context)
 
   val masterProxy = context.actorOf(
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  var workCounter = 0
-
-  val copernicus1 = new CopernicusSource(config)
-  Source.start(copernicus1)
-  //  val copernicus2 = new CopernicusSource(config)
-  //  Source.start(copernicus2)
-  //  val copernicus3 = new CopernicusSource(config)
-  //  Source.start(copernicus3)
-  //  val copernicus4 = new CopernicusSource(config)
-  //  Source.start(copernicus4)
-  //  val copernicus5 = new CopernicusSource(config)
-  //  Source.start(copernicus5)
-  //  val copernicus7 = new CopernicusSource(config)
-  //  Source.start(copernicus7)
-  //  val copernicus8 = new CopernicusSource(config)
-  //  Source.start(copernicus8)
-  //  val copernicus9 = new CopernicusSource(config)
-  //  Source.start(copernicus9)
-  //  val copernicus10 = new CopernicusSource(config)
-  //  Source.start(copernicus10)
-  //  val copernicus12 = new CopernicusSource(config)
-  //  Source.start(copernicus12)
-  //  val copernicus13 = new CopernicusSource(config)
-  //  Source.start(copernicus13)
-  //  val copernicus14 = new CopernicusSource(config)
-  //  Source.start(copernicus14)
-  //  val copernicus15 = new CopernicusSource(config)
-  //  Source.start(copernicus15)
-
+  val copernicus1 = new CopernicusOAHSource(config)
+  PeriodicSource.start(copernicus1)
 
   def receive = {
 
     case ProduceWork(work) =>
-      workCounter += 1
-      log.info("Produced work: {}", workCounter)
+      log.info("Produced work")
       sendWork(work)
 
     case Master.Ack(work) =>
       log.info("Got ack for workId {}", work.workId)
 
-      if (!work.isEpoch)
-        Source.scheduleOnce(ProduceWork(work.source.generateWork(work)))
+      work match {
+        case rw: RESTWork => // TODO not only rest work
+          if (!rw.isEpoch)
+            PeriodicSource.scheduleOnceSource(ProduceWork(rw.generatePeriodicWork()))
+      }
+
 
     case NotOk(work) =>
       log.info("Work {} not accepted, retry after a while", work.workId)
-      Source.scheduleOnce(Retry(work))
+      PeriodicSource.scheduleOnceSource(Retry(work))
 
     case Retry(work) =>
       log.info("Retrying work {}", work.workId)

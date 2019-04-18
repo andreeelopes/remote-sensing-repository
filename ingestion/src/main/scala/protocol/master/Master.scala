@@ -2,7 +2,8 @@ package protocol.master
 
 import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import work.{KryoSerializable, Work}
+import sources.Work
+import utils.KryoSerializable
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 

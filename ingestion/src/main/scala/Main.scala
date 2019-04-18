@@ -5,9 +5,9 @@ import java.util.concurrent.CountDownLatch
 
 import akka.actor.ActorSystem
 import akka.persistence.cassandra.testkit.CassandraLauncher
-import protocol.scheduler.{Orchestrator, WorkResultConsumer}
 import com.typesafe.config.{Config, ConfigFactory}
 import protocol.master.MasterSingleton
+import protocol.scheduler.Orchestrator
 import protocol.worker.Worker
 
 
@@ -77,7 +77,7 @@ object Main {
   def startFrontEnd(port: Int): Unit = {
     val system = ActorSystem("ClusterSystem", config(port, "front-end"))
     system.actorOf(Orchestrator.props, "front-end")
-    system.actorOf(WorkResultConsumer.props, "consumer")
+    //    system.actorOf(WorkResultConsumer.props, "consumer")
   }
 
   // #front-end

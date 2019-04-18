@@ -4,8 +4,8 @@ import java.util.UUID
 
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import akka.actor._
-import protocol.master.MasterWorkerProtocol.{Ack, DeRegisterWorker, RegisterWorker, WorkFailed, WorkIsDone, WorkIsReady, WorkerRequestsWork}
-import work.Work
+import protocol.master.MasterWorkerProtocol._
+import sources.Work
 
 import scala.concurrent.duration._
 

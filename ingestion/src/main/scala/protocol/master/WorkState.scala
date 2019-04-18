@@ -1,6 +1,8 @@
 package protocol.master
 
-import work.{KryoSerializable, Work}
+
+import sources.Work
+import utils.KryoSerializable
 
 import scala.collection.immutable.Queue
 
@@ -74,10 +76,8 @@ case class WorkState private(
         } else this //conflict between previous check (busy or idle) and workInProgress(workId)
 
       case WorkerTimedOut(workId) =>
-
         if (workInProgress.get(workId).isDefined) {
-          copy(
-            pendingWork = pendingWork enqueue workInProgress(workId),
+          copy(pendingWork = pendingWork enqueue workInProgress(workId),
             workInProgress = workInProgress - workId)
         } else this //conflict between previous check (busy or idle) and workInProgress(workId)
 
