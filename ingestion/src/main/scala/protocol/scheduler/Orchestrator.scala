@@ -6,8 +6,8 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
-import sources.web.metadata.{CopernicusOAHSource, RESTWork}
-import sources.{PeriodicSource, Work}
+import sources.Work
+import sources.periodic.{CopernicusMDSource, PeriodicWork}
 
 object Orchestrator {
 
@@ -31,7 +31,7 @@ class Orchestrator extends Actor with ActorLogging {
   import Orchestrator._
   import context._
 
-  implicit val scheduler = context.system.scheduler
+  val scheduler = context.system.scheduler
   val config = context.system.settings.config
   implicit val mat = ActorMaterializer()(context)
 
@@ -39,8 +39,8 @@ class Orchestrator extends Actor with ActorLogging {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  val copernicus1 = new CopernicusOAHSource(config)
-  PeriodicSource.start(copernicus1)
+  val copernicus = new CopernicusMDSource(config)
+  copernicus.start
 
   def receive = {
 
@@ -51,16 +51,16 @@ class Orchestrator extends Actor with ActorLogging {
     case Master.Ack(work) =>
       log.info("Got ack for workId {}", work.workId)
 
+      //TODO possible problems
       work match {
-        case rw: RESTWork => // TODO not only rest work
-          if (!rw.isEpoch)
-            PeriodicSource.scheduleOnceSource(ProduceWork(rw.generatePeriodicWork()))
+        case pw: PeriodicWork =>
+          if (!pw.isEpoch)
+            scheduler.scheduleOnce(pw.source.fetchingFrequency, self, ProduceWork(pw.generatePeriodicWork()))
       }
-
 
     case NotOk(work) =>
       log.info("Work {} not accepted, retry after a while", work.workId)
-      PeriodicSource.scheduleOnceSource(Retry(work))
+      scheduler.scheduleOnce(work.source.retryInterval, self, Retry(work))
 
     case Retry(work) =>
       log.info("Retrying work {}", work.workId)
