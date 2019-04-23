@@ -1,6 +1,6 @@
 package sources.periodic
 
-import java.io.PrintWriter
+import java.io.{File, PrintWriter}
 
 import akka.actor.ActorContext
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -37,8 +37,10 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
   //TODO order by new to old, add more parameters
   override val url = s"${source.baseUrl}start=$pageStart&rows=${source.pageSize}&" +
     s"q=ingestiondate:[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]" +
-    s"&platformname:Sentinel-2"
+    s"%20AND%20platformname:Sentinel-2"
 
+
+  var productId: String = _
   var resource: Elem = _
 
   def generatePeriodicWork() = {
@@ -46,12 +48,7 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
     new CopernicusMDWork(source, updatedIngestionWindow)
   }
 
-  def generateNextPagesWork() = new CopernicusMDWork(source, ingestionDates, isEpoch, pageStart + source.pageSize)
-
-
-
   def execute()(implicit context: ActorContext, mat: ActorMaterializer) = {
-    println(s"Starting to fetch: $url") // TODO logs
 
     implicit val origSender = context.sender
 
@@ -62,13 +59,10 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
           case Success(responseString) =>
             resource = XML.loadString(responseString)
 
-            val processedXML = preProcess()
-
-            new PrintWriter(s"$ingestionDates-Copernicus-metadata$workId.xml") {
-              try write(processedXML.toString) finally close()
-            }
-
             val workToBeDone = getGeneratedWork
+
+            val processedXML = resource // TODO preProcess()
+
             origSender ! WorkComplete(workToBeDone)
 
 
@@ -78,8 +72,6 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
     }
 
   }
-
-  def preProcess() = resource = resource
 
   def getGeneratedWork: List[Work] = {
     var workToBeDone = List[Work]()
@@ -97,21 +89,44 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
       //      val lastPageStart = Uri.parseAbsolute(last).query().get("start").get.toInt
       //
       //      for (pageStart <- source.pageSize to lastPageStart by source.pageSize)
-      workToBeDone ::= generateNextPagesWork()
+      //      workToBeDone ::= generateNextPagesWork() TODO
     }
 
     // Go to product structure
 
-    //    (resource.child \\ "entry").foreach { node =>
-    //      node \ "link"
+    //    (resource \ "entry").foreach { node =>
+    //      val productId = (node \ "id").text
+    //    new File(productId).mkdirs() //TODO
+
     //      val links = node \ "link"
     //      val linkAlternative = links.filter(node => (node \@ "rel").equals("alternative"))
     //      val href = linkAlternative \@ "href"
-    ////      workToBeDone ::= new CopernicusODataWork(new CopernicusODataSource(source.config), href)
+    //      workToBeDone ::= new CopernicusODataMDWork(new CopernicusODataMDSource(source.config), productId)
+    //      workToBeDone ::= new CopernicusODataFileWork(new CopernicusODataFileSource(source.config), s"${href}Nodes", productId)
     //    }
+
+
+    // TODO get more info
+    val node = (resource \ "entry").head
+    productId = (node \ "id").text
+    val links = node \ "link"
+    val linkAlternative = links.filter(node => (node \@ "rel").equals("alternative"))
+    val href = linkAlternative \@ "href"
+
+    new File(productId).mkdirs
+    new PrintWriter(s"$productId\\opensearchMD.xml") {
+      try write(node.toString) finally close()
+    }
+
+    workToBeDone ::= new CopernicusODataMDWork(new CopernicusODataMDSource(source.config), productId)
+    workToBeDone ::= new CopernicusODataFileWork(new CopernicusODataFileSource(source.config), s"${href}Nodes", productId)
 
     workToBeDone
   }
+
+  def preProcess() = {} //TODO
+
+  def generateNextPagesWork() = new CopernicusMDWork(source, ingestionDates, isEpoch, pageStart + source.pageSize)
 
 
 }

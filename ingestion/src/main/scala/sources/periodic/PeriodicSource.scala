@@ -24,7 +24,7 @@ abstract class PeriodicSource(configName: String, config: Config) extends Source
 
   def start(implicit context: ActorContext) = {
     context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(epochInitialWork))
-    context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork))
+    //    context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork)) TODO
   }
 
   def adjustIngestionWindow(ingestionDates: (DateTime, DateTime)) =

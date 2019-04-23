@@ -51,7 +51,7 @@ class Orchestrator extends Actor with ActorLogging {
     case Master.Ack(work) =>
       log.info("Got ack for workId {}", work.workId)
 
-      //TODO possible problems
+      //TODO possible problems because of timers
       work match {
         case pw: PeriodicWork =>
           if (!pw.isEpoch)
