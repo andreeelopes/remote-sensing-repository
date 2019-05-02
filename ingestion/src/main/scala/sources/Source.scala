@@ -20,7 +20,7 @@ abstract class Source(configName: String, config: Config) extends Serializable {
 
 abstract class Work(val source: Source) extends Serializable {
 
-  val workId = Utils.generateWorkId()
+  val workId = Utils.generateUUID()
 
   def execute()(implicit context: ActorContext, mat: ActorMaterializer)
 

@@ -1,10 +1,9 @@
-package sources.periodic
+package sources
 
 import akka.actor.ActorContext
 import com.typesafe.config.Config
 import org.joda.time.DateTime
 import protocol.scheduler.Orchestrator.ProduceWork
-import sources.{Source, Work}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -24,7 +23,7 @@ abstract class PeriodicSource(configName: String, config: Config) extends Source
 
   def start(implicit context: ActorContext) = {
     context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(epochInitialWork))
-    //    context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork)) TODO
+    //    context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork))
   }
 
   def adjustIngestionWindow(ingestionDates: (DateTime, DateTime)) =

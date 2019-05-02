@@ -1,8 +1,7 @@
-package sources.periodic
+package sources
 
 import com.typesafe.config.Config
 import org.joda.time.DateTime
-import sources.Work
 
 
 abstract class PeriodicRESTSource(configName: String, config: Config) extends PeriodicSource(configName, config) {

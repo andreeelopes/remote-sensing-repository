@@ -2,8 +2,8 @@ package protocol.master
 
 import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
+import protocol.master.MasterWorkerProtocol._
 import sources.Work
-import utils.KryoSerializable
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
@@ -17,16 +17,15 @@ object Master {
   def props(cleanupTimeout: FiniteDuration): Props =
     Props(new Master(cleanupTimeout))
 
-  case class Ack(work: Work) extends KryoSerializable
-
   private sealed trait WorkerStatus
 
-  private case object Idle extends WorkerStatus
+  case class Ack(work: Work)
 
   private case class Busy(workId: String, deadline: Deadline) extends WorkerStatus
 
   private case class WorkerState(ref: ActorRef, status: WorkerStatus, staleWorkerDeadline: Deadline)
-    extends KryoSerializable
+
+  private case object Idle extends WorkerStatus
 
   private case object CleanupTick
 
@@ -41,19 +40,14 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
 
   val considerWorkerDeadAfter: FiniteDuration =
     context.system.settings.config.getDuration("distributed-workers.consider-worker-dead-after").getSeconds.seconds
-
-  def newStaleWorkerDeadline(): Deadline = considerWorkerDeadAfter.fromNow
+  // the set of available workers is not event sourced as it depends on the current set of workers
+  private var workers = Map[String, WorkerState]()
 
   timers.startPeriodicTimer("cleanup", CleanupTick, cleanupTimeout)
 
   //  val mediator: ActorRef = DistributedPubSub(context.system).mediator
-
-  // the set of available workers is not event sourced as it depends on the current set of workers
-  private var workers = Map[String, WorkerState]()
-
   // workState is event sourced to be able to make sure work is processed even in case of crash
   private var workState = WorkState.empty
-
 
   override def receiveRecover: Receive = {
 
@@ -74,7 +68,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
   }
 
   override def receiveCommand: Receive = {
-    case MasterWorkerProtocol.RegisterWorker(workerId) =>
+    case RegisterWorker(workerId) =>
       if (workers.contains(workerId)) {
         workers += (workerId -> workers(workerId).copy(ref = sender(), staleWorkerDeadline = newStaleWorkerDeadline()))
       } else {
@@ -90,7 +84,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
       }
 
     // #graceful-remove
-    case MasterWorkerProtocol.DeRegisterWorker(workerId) =>
+    case DeRegisterWorker(workerId) =>
       workers.get(workerId) match {
         case Some(WorkerState(_, Busy(workId, _), _)) =>
           // there was a workload assigned to the worker when it left
@@ -106,7 +100,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
       workers -= workerId
     // #graceful-remove
 
-    case MasterWorkerProtocol.WorkerRequestsWork(workerId) =>
+    case WorkerRequestsWork(workerId) =>
       if (workState.hasWork) {
         workers.get(workerId) match {
           case Some(workerState@WorkerState(_, Idle, _)) =>
@@ -124,7 +118,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
         }
       }
 
-    case MasterWorkerProtocol.WorkIsDone(workerId, workId, nextWork) =>
+    case WorkIsDone(workerId, workId, nextWork) =>
       // idempotent - redelivery from the worker may cause duplicates, so it needs to be
       if (workState.isDone(workId)) {
         // previous Ack was lost, confirm again that this is done
@@ -147,7 +141,8 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
 
       }
 
-    case MasterWorkerProtocol.WorkFailed(workerId, workId) =>
+    case WorkFailed(workerId, workId) =>
+
       if (workState.isInProgress(workId)) {
         log.info("Work {} failed by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)
@@ -174,11 +169,19 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
       }
     // #persisting
 
-    case Ack(work) => log.info("Recursive work acked: {}", work.workId)
+    case Ack(work) => log.debug("Recursive work acked: {}", work.workId)
 
 
     // #pruning
     case CleanupTick =>
+
+      log.info("--------------------")
+      log.info("Pending: " + workState.pendingWork)
+      log.info("Progress: " + workState.workInProgress)
+      log.info("Busy Workers: " + workers.values.count(state => state.status.isInstanceOf[Busy]))
+      log.info("Idle Workers: " + workers.values.count(state => !state.status.isInstanceOf[Busy]))
+      log.info("--------------------")
+
       workers.foreach {
         case (workerId, WorkerState(_, Busy(workId, timeout), _)) if timeout.isOverdue() =>
           log.info("Work timed out: {}", workId)
@@ -214,6 +217,8 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
       case _ ⇒
       // ok, might happen after standby recovery, worker state is not persisted
     }
+
+  def newStaleWorkerDeadline(): Deadline = considerWorkerDeadAfter.fromNow
 
   def tooLongSinceHeardFrom(lastHeardFrom: Long) =
     System.currentTimeMillis() - lastHeardFrom > considerWorkerDeadAfter.toMillis

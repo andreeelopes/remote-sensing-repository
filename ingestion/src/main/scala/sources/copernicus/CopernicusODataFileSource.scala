@@ -1,4 +1,4 @@
-package sources
+package sources.copernicus
 
 import java.io.File
 
@@ -7,6 +7,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import protocol.worker.WorkExecutor.WorkComplete
+import sources._
 import utils.AkkaHTTP
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,45 +42,31 @@ class CopernicusODataFileWork(override val source: CopernicusODataFileSource, va
             var workToBeDone = List[Work]()
 
             (resource \ "entry").foreach { node =>
-              //TODO ignore IMG_DATA
 
-              //              if ((node \ "title").text != "IMG_DATA") {
+              if ((node \ "title").text != "IMG_DATA") {
 
-              val resourceUrl = (node \ "id").text
-              val length = (node \ "properties" \ "ContentLength").text.toInt
+                val resourceUrl = (node \ "id").text
+                val length = (node \ "properties" \ "ContentLength").text.toInt
 
-              val nodesQuery = resourceUrl.split("/Nodes").map {
-                //('L2A_T13XDG_A011094_20190421T205226') => L2A_T13XDG_A011094_20190421T205226
-                node => node.substring(2, node.length - 2)
-              }.drop(1) // remove base url
+                val nodesQuery = resourceUrl.split("/Nodes").map {
+                  //('L2A_T13XDG_A011094_20190421T205226') => L2A_T13XDG_A011094_20190421T205226
+                  node => node.substring(2, node.length - 2)
+                }.drop(1) // remove base url
 
-              val path = s"$productId/${nodesQuery.mkString("/")}"
+                val path = s"$productId/${nodesQuery.mkString("/")}"
 
-
-              if (length == 0) {
-                // TODO check if it has more than 2 concurrent requests
-                new File(path).mkdirs()
-                workToBeDone ::= new CopernicusODataFileWork(source, s"$resourceUrl/Nodes", productId)
-              } else
-                workToBeDone ::= new FetchAndSaveWork(
-                  new FetchAndSaveSource("copernicusOAHOData", source.config), //TODO add own conf
-                  s"$resourceUrl/$$value", path)
-
-              //              }
+                if (length == 0) {
+                  // TODO check if it has more than 2 concurrent requests
+                  new File(path).mkdirs()
+                  workToBeDone ::= new CopernicusODataFileWork(source, s"$resourceUrl/Nodes", productId)
+                } else
+                  workToBeDone ::= new FetchAndSaveWork(
+                    new FetchAndSaveSource("copernicusOAHOData", source.config), //TODO add own conf
+                    s"$resourceUrl/$$value", path)
+              }
 
             }
 
-
-
-
-
-
-
-
-            //get next
-            //save this
-            //avoid img_data
-            //work-failed tem de ser retentado
 
             origSender ! WorkComplete(workToBeDone)
 

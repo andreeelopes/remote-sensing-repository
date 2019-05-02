@@ -11,10 +11,9 @@ import scala.concurrent.Future
 
 object AkkaHTTP {
 
-  // TODO streaming for big objects
   def singleRequest(url: String, authConfigOpt: Option[AuthConfig])
                    (implicit context: ActorContext, mat: ActorMaterializer): Future[HttpResponse] = {
-    println(s"Starting to fetch: $url") // TODO logs
+    println(url) // TODO logs
 
     val request = if (authConfigOpt.isDefined) {
       val authConfig = authConfigOpt.get

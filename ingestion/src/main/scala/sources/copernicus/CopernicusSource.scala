@@ -1,4 +1,4 @@
-package sources.periodic
+package sources.copernicus
 
 import java.io.{File, PrintWriter}
 
@@ -89,44 +89,49 @@ class CopernicusMDWork(override val source: CopernicusMDSource,
       //      val lastPageStart = Uri.parseAbsolute(last).query().get("start").get.toInt
       //
       //      for (pageStart <- source.pageSize to lastPageStart by source.pageSize)
-      //      workToBeDone ::= generateNextPagesWork() TODO
+      //            workToBeDone ::= generateNextPagesWork()TODO
     }
 
-    // Go to product structure
 
+    //    // TODO get more info
     //    (resource \ "entry").foreach { node =>
-    //      val productId = (node \ "id").text
-    //    new File(productId).mkdirs() //TODO
-
+    //
+    //      productId = (node \ "id").text
     //      val links = node \ "link"
     //      val linkAlternative = links.filter(node => (node \@ "rel").equals("alternative"))
     //      val href = linkAlternative \@ "href"
+    //
+    //      new File(productId).mkdirs
+    //      new PrintWriter(s"$productId/opensearchMD.xml") {
+    //        try write(node.toString) finally close()
+    //      }
+    //
     //      workToBeDone ::= new CopernicusODataMDWork(new CopernicusODataMDSource(source.config), productId)
     //      workToBeDone ::= new CopernicusODataFileWork(new CopernicusODataFileSource(source.config), s"${href}Nodes", productId)
     //    }
 
-
-    // TODO get more info
     val node = (resource \ "entry").head
+
     productId = (node \ "id").text
     val links = node \ "link"
     val linkAlternative = links.filter(node => (node \@ "rel").equals("alternative"))
     val href = linkAlternative \@ "href"
 
     new File(productId).mkdirs
-    new PrintWriter(s"$productId\\opensearchMD.xml") {
+    new PrintWriter(s"$productId/opensearchMD.xml") {
       try write(node.toString) finally close()
     }
 
     workToBeDone ::= new CopernicusODataMDWork(new CopernicusODataMDSource(source.config), productId)
     workToBeDone ::= new CopernicusODataFileWork(new CopernicusODataFileSource(source.config), s"${href}Nodes", productId)
 
+
     workToBeDone
   }
 
-  def preProcess() = {} //TODO
-
   def generateNextPagesWork() = new CopernicusMDWork(source, ingestionDates, isEpoch, pageStart + source.pageSize)
+
+  def preProcess() = {} //TODO
 
 
 }

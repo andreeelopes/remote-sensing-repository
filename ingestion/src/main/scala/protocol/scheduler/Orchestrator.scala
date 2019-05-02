@@ -6,8 +6,8 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
-import sources.Work
-import sources.periodic.{CopernicusMDSource, PeriodicWork}
+import sources.copernicus.CopernicusMDSource
+import sources.{PeriodicWork, Work}
 
 object Orchestrator {
 

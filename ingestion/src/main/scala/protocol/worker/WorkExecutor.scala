@@ -3,7 +3,6 @@ package protocol.worker
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.stream.ActorMaterializer
 import sources.Work
-import utils.KryoSerializable
 
 
 /**
@@ -13,9 +12,9 @@ import utils.KryoSerializable
 object WorkExecutor {
   def props = Props(new WorkExecutor)
 
-  case class DoWork(work: Work) extends KryoSerializable
+  case class DoWork(work: Work)
 
-  case class WorkComplete(nextWork: List[Work]) extends KryoSerializable
+  case class WorkComplete(nextWork: List[Work])
 
 }
 
@@ -27,7 +26,11 @@ class WorkExecutor extends Actor with ActorLogging {
 
 
   def receive = {
-    case DoWork(work) => work.execute
+    case DoWork(work) =>
+      //      context.system.scheduler.scheduleOnce(work.source.workTimeout, self, new Exception(s"Work ${work.workId} timed out"))
+      work.execute
+
+    case e: Exception => throw new Exception(e)
   }
 
 

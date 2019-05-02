@@ -2,7 +2,6 @@ package protocol.master
 
 
 import sources.Work
-import utils.KryoSerializable
 
 import scala.collection.immutable.Queue
 
@@ -14,7 +13,7 @@ object WorkState {
     acceptedWorkIds = Set.empty,
     doneWorkIds = Set.empty)
 
-  trait WorkDomainEvent extends KryoSerializable
+  trait WorkDomainEvent
 
   // #events
   case class WorkAccepted(work: Work) extends WorkDomainEvent
@@ -30,11 +29,11 @@ object WorkState {
   // #events
 }
 
-case class WorkState private(
-                              private val pendingWork: Queue[Work],
-                              private val workInProgress: Map[String, Work],
-                              private val acceptedWorkIds: Set[String],
-                              private val doneWorkIds: Set[String]) {
+case class WorkState(
+                      val pendingWork: Queue[Work],
+                      val workInProgress: Map[String, Work],
+                      val acceptedWorkIds: Set[String],
+                      val doneWorkIds: Set[String]) {
 
   import WorkState._
 
@@ -62,7 +61,7 @@ case class WorkState private(
           pendingWork = rest,
           workInProgress = workInProgress + (workId -> work))
 
-      case WorkCompleted(workId, result) =>
+      case WorkCompleted(workId, _) =>
         copy(
           workInProgress = workInProgress - workId,
           doneWorkIds = doneWorkIds + workId)

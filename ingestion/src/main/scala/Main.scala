@@ -42,23 +42,20 @@ object Main {
   def startClusterInSameJvm(): Unit = {
     startCassandraDatabase()
 
-    // two backend nodes
+    // backend nodes
     startBackEnd(2551)
     //    startBackEnd(2552)
-    // two front-end nodes
+    // front-end nodes
     //    startFrontEnd(3000)
     startFrontEnd(3001)
-    // two worker nodes with two worker actors each
+    // worker nodes
     startWorker(5001, 1, 1)
-    //    startWorker(5002, 1, 2)
+    startWorker(5002, 1, 2)
     //    startWorker(5003, 1, 3)
-//    startWorker(5004, 1, 4)
-//    startWorker(5005, 1, 5)
-//    startWorker(5005, 1, 6)
-//    startWorker(5005, 1, 7)
-//    startWorker(5005, 1, 8)
-//    startWorker(5005, 1, 9)
-//    startWorker(5005, 1, 10)
+    //    startWorker(5004, 1, 4)
+    //    startWorker(5005, 1, 8)
+    //    startWorker(5005, 1, 9)
+    //    startWorker(5005, 1, 10)
   }
 
   /**
