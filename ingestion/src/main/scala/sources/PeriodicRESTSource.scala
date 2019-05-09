@@ -16,10 +16,8 @@ abstract class PeriodicRESTWork(override val source: PeriodicRESTSource,
 
   val url: String
 
-  def preProcess()
+  //  def process: List[Work]
 
-  def getGeneratedWork: List[Work]
-
-  def generateNextPagesWork(): Work
+  //  def generateNextPagesWork(): Work
 
 }

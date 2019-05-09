@@ -20,6 +20,9 @@ object Main {
   val frontEndPortRange = 3000 to 3999
 
   def main(args: Array[String]): Unit = {
+
+    new File("data").mkdirs //TODO
+
     args.headOption match {
 
       case None =>

@@ -6,7 +6,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
-import sources.copernicus.CopernicusMDSource
+import sources.copernicus.CopernicusOSearchSource
 import sources.{PeriodicWork, Work}
 
 object Orchestrator {
@@ -39,7 +39,7 @@ class Orchestrator extends Actor with ActorLogging {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  val copernicus = new CopernicusMDSource(config)
+  val copernicus = new CopernicusOSearchSource(config)
   copernicus.start
 
   def receive = {
