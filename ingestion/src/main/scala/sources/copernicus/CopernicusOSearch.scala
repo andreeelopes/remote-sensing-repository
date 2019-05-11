@@ -16,7 +16,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 import scala.xml.{Elem, Node, XML}
 
-class CopernicusOSearchSource(val config: Config)
+class CopernicusOSearchSource(val config: Config,
+                              val platform: String = "Sentinel2",
+                              val productType: String = "S2MSI1C")
   extends PeriodicRESTSource("copernicus.copernicus-oah-opensearch", config) {
 
   final val configName = "copernicus.copernicus-oah-opensearch"
@@ -35,7 +37,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
   //TODO order by new to old, add more parameters
   override val url = s"${source.baseUrl}start=$pageStart&rows=${source.pageSize}&" +
     s"q=ingestiondate:[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]" +
-    s"%20AND%20producttype:S2MSI1C"
+    s"%20AND%20producttype:${source.productType}"
 
 
   def generatePeriodicWork() = {
@@ -82,7 +84,12 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val title = (node \ "title").text
     new File(s"data/$productId").mkdirs() //TODO data harcoded
 
-    List(new CopernicusManifestWork(new CopernicusManifestSource(source.config), productId, title))
+    //TODO what about other sentinels...
+    List(
+      new CopernicusManifestWork(new CopernicusManifestSource(source.config), productId, title),
+      new CreodiasMDWork(new CreodiasMDSource(source.config), productId, title, source.platform)
+    )
+
   }
 
 

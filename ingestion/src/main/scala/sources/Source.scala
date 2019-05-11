@@ -8,7 +8,7 @@ import utils.Utils
 import scala.concurrent.duration._
 
 case class ExtractionEntry(name: String, queryType: String, resultType: String,
-                           path: String, parentExtraction: String, destPath: String)
+                           query: String, parentExtraction: String, destPath: String, api: String)
 
 abstract class Source(configName: String, config: Config) extends Serializable {
 

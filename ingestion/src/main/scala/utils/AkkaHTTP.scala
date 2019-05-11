@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 object AkkaHTTP {
 
-  def singleRequest(url: String, authConfigOpt: Option[AuthConfig])
+  def singleRequest(url: String, authConfigOpt: Option[AuthConfig] = None)
                    (implicit context: ActorContext, mat: ActorMaterializer): Future[HttpResponse] = {
     println(url) // TODO logs
 

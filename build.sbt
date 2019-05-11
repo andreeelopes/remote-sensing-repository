@@ -56,11 +56,12 @@ lazy val dependencies =
     val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
     val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     val commonsIO = "commons-io" % "commons-io" % "2.4" % "test"
-    
+
     val jodaTime = "joda-time" % "joda-time" % "2.10.1"
 
     val kryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.5.1"
 
+    val jsonPath = "com.jayway.jsonpath" % "json-path" % "2.4.0"
 
   }
 
@@ -78,7 +79,8 @@ lazy val commonDependencies = Seq(
   dependencies.scalaTest,
   dependencies.commonsIO,
   dependencies.jodaTime,
-  dependencies.kryo
+  dependencies.kryo,
+  dependencies.jsonPath
 )
 
 // SETTINGS
