@@ -5,10 +5,9 @@ import java.util.UUID
 
 import com.typesafe.config.Config
 import sources.ExtractionEntry
-import utils.XmlUtils.generateQueryXmlFile
+import utils.JsonUtils.generateQueryJsonFile
 
 import scala.collection.JavaConverters._
-import scala.xml.XML
 
 
 trait KryoSerializable
@@ -29,10 +28,10 @@ object Utils {
       .replace("(filename)", filename)
 
     val updatedExtrEntry = extractionEntry.copy(destPath = destPath)
-    val queryXML = generateQueryXmlFile(updatedExtrEntry, url)
+    val queryJson = generateQueryJsonFile(updatedExtrEntry, url)
 
     writeFile(destPath, responseBytes)
-    XML.save(s"$destPath-query", queryXML)
+    writeFile(s"$destPath-query", queryJson.toString)
   }
 
   def writeFile(filename: String, data: Array[Byte]) = {
@@ -55,7 +54,7 @@ object Utils {
         entry.getString("query-type"),
         entry.getString("result-type"),
         entry.getString("query"),
-        entry.getString("parent-extraction"),
+        entry.getString("doc-context"),
         entry.getString("dest-path"),
         entry.getString("api")
       )
@@ -63,4 +62,17 @@ object Utils {
   }
 
 
+  def getSentinelProductsToFetch(config: Config) = {
+
+    config.getConfigList(s"sources.copernicus.copernicus-oah-opensearch.products").asScala.toList.map { entry =>
+      ProductEntry(
+        entry.getString("platform"),
+        entry.getString("product-type")
+      )
+    }
+  }
+
+
 }
+
+case class ProductEntry(platform: String, productType: String)

@@ -7,6 +7,8 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import org.joda.time.DateTime
+import org.json.XML
+import play.api.libs.json.{JsObject, JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
 import sources._
 import utils.AkkaHTTP
@@ -14,11 +16,11 @@ import utils.Utils._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
-import scala.xml.{Elem, Node, XML}
+
 
 class CopernicusOSearchSource(val config: Config,
-                              val platform: String = "Sentinel2",
-                              val productType: String = "S2MSI1C")
+                              val platform: String,
+                              val productType: String)
   extends PeriodicRESTSource("copernicus.copernicus-oah-opensearch", config) {
 
   final val configName = "copernicus.copernicus-oah-opensearch"
@@ -52,10 +54,10 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     AkkaHTTP.singleRequest(url, source.authConfigOpt).onComplete {
       case Success(response) =>
 
-        Unmarshal(response.entity).to[String].onComplete {
+        Unmarshal(response.entity.withoutSizeLimit).to[String].onComplete {
           case Success(responseString) =>
 
-            val workToBeDone = process(XML.loadString(responseString))
+            val workToBeDone = process(XML.toJSONObject(responseString).toString(3))
 
             origSender ! WorkComplete(workToBeDone)
 
@@ -66,36 +68,41 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
   }
 
-  private def process(doc: Elem): List[Work] = {
+  private def process(docJson: String): List[Work] = {
+    val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
     //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "entry").head.foreach(node => workToBeDone :::= processEntry(node))
+    (doc \ "feed" \ "entry").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
 
-    XML.save(s"data/$pageStart-copernicus-osearch", doc)
-    //    XML.save(s"(${ingestionDates._1})-(${ingestionDates._2})-($pageStart)-copernicus-osearch", doc)
+    writeFile(s"data/($pageStart)-(${source.productType})-copernicus-osearch", docJson)
+    //    writeFile(s"data/(${ingestionDates._1})-(${ingestionDates._2})-($pageStart)-(${source.productType})-copernicus-osearch",compact(render(doc)))
 
     workToBeDone
   }
 
-  private def processEntry(node: Node) = {
-    val productId = (node \ "id").text
-    val title = (node \ "title").text
+  private def processEntry(node: JsValue) = {
+
+    val productId = (node \ "id").as[String]
+    val title = (node \ "title").as[String]
     new File(s"data/$productId").mkdirs() //TODO data harcoded
 
-    //TODO what about other sentinels...
     List(
-      new CopernicusManifestWork(new CopernicusManifestSource(source.config), productId, title),
+      new CopernicusManifestWork(
+        new CopernicusManifestSource(source.config, source.platform, source.productType),
+        productId,
+        title
+      ),
+
       new CreodiasMDWork(new CreodiasMDSource(source.config), productId, title, source.platform)
     )
-
   }
 
 
-  private def getNextPagesWork(doc: Node): Option[Work] = {
-    val linksPages = doc.child.filter(node => node.label.equals("link"))
-    val linkNextPage = linksPages.filter(node => (node \@ "rel").equals("next"))
+  private def getNextPagesWork(doc: JsValue): Option[Work] = {
+    val linksPages = (doc \ "feed" \ "link").as[List[JsValue]]
+    val linkNextPage = linksPages.filter(link => (link \ "rel").as[String] == "next")
 
     if (linkNextPage.nonEmpty)
       Some(new CopernicusOSearchWork(source, ingestionDates, isEpoch, pageStart + source.pageSize))

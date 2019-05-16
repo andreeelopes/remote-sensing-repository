@@ -8,6 +8,7 @@ import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
 import sources.copernicus.CopernicusOSearchSource
 import sources.{PeriodicWork, Work}
+import utils.Utils.getSentinelProductsToFetch
 
 object Orchestrator {
 
@@ -39,8 +40,10 @@ class Orchestrator extends Actor with ActorLogging {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  val copernicus = new CopernicusOSearchSource(config)
-  copernicus.start
+  getSentinelProductsToFetch(config).foreach { p =>
+    val copernicus = new CopernicusOSearchSource(config, p.platform, p.productType)
+    copernicus.start
+  }
 
   def receive = {
 

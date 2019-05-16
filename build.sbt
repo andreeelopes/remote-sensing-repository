@@ -61,7 +61,10 @@ lazy val dependencies =
 
     val kryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.5.1"
 
+    val playJson = "com.typesafe.play" %% "play-json" % "2.7.2"
+    val json = "org.json" % "json" % "20180813"
     val jsonPath = "com.jayway.jsonpath" % "json-path" % "2.4.0"
+
 
   }
 
@@ -80,7 +83,9 @@ lazy val commonDependencies = Seq(
   dependencies.commonsIO,
   dependencies.jodaTime,
   dependencies.kryo,
-  dependencies.jsonPath
+  dependencies.jsonPath,
+  dependencies.playJson,
+  dependencies.json
 )
 
 // SETTINGS

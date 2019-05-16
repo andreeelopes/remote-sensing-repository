@@ -7,9 +7,10 @@ import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import org.json.XML
 import protocol.worker.WorkExecutor.WorkComplete
-import utils.XmlUtils._
-import utils.{AkkaHTTP, Utils}
+import utils.AkkaHTTP
+import utils.JsonUtils._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -39,7 +40,7 @@ class CopernicusODataWork(override val source: CopernicusODataSource, val url: S
           throw e
         }
 
-        Unmarshal(response.entity).to[Array[Byte]].onComplete {
+        Unmarshal(response.entity.withoutSizeLimit).to[Array[Byte]].onComplete {
           case Success(responseBytes) =>
 
             process(responseBytes)
@@ -61,22 +62,47 @@ class CopernicusODataWork(override val source: CopernicusODataSource, val url: S
   private def process(responseBytes: Array[Byte]) = {
     source.extractions.foreach { e =>
       e.queryType match {
-        case "file" if e.resultType == "xml" =>
-          if (e.resultType == "xml")
-            processFile(new String(responseBytes, StandardCharsets.UTF_8), e, productId, filename, url)
-        case "multi-file" =>
-          processMultiFile(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
-        case "single-value" =>
-          processSingleValue(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
-        case "multi-value" =>
-          processMultiValue(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
-        case _ =>
-          Utils.processFile(responseBytes, e, productId, filename, url) //big files problem
+        case "file" =>
+          val xml = new String(responseBytes, StandardCharsets.UTF_8)
 
+          processFile(XML.toJSONObject(xml).toString(3), e, productId, filename, url)
+        case "multi-file" =>
+          val xml = new String(responseBytes, StandardCharsets.UTF_8)
+
+          processMultiFile(XML.toJSONObject(xml).toString(3), e, productId, url)
+        case "single-value" =>
+          val xml = new String(responseBytes, StandardCharsets.UTF_8)
+
+          processSingleValue(XML.toJSONObject(xml).toString(3), e, productId, url)
+        case "multi-value" =>
+          val xml = new String(responseBytes, StandardCharsets.UTF_8)
+
+          processMultiValue(XML.toJSONObject(xml).toString(3), e, productId, url)
       }
+
     }
 
   }
+
+  //  private def process(responseBytes: Array[Byte]) = {
+  //    source.extractions.foreach { e =>
+  //      e.queryType match {
+  //        case "file" if e.resultType == "xml" =>
+  //          if (e.resultType == "xml")
+  //            processFile(new String(responseBytes, StandardCharsets.UTF_8), e, productId, filename, url)
+  //        case "multi-file" =>
+  //          processMultiFile(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
+  //        case "single-value" =>
+  //          processSingleValue(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
+  //        case "multi-value" =>
+  //          processMultiValue(new String(responseBytes, StandardCharsets.UTF_8), e, productId, url)
+  //        case _ =>
+  //          Utils.processFile(responseBytes, e, productId, filename, url) //big files problem
+  //
+  //      }
+  //    }
+  //
+  //  }
 
 
 }

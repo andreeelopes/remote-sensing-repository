@@ -53,7 +53,7 @@ object Main {
     startFrontEnd(3001)
     // worker nodes
     startWorker(5001, 1, 1)
-    startWorker(5002, 1, 2)
+    //    startWorker(5002, 1, 2)
     //    startWorker(5003, 1, 3)
     //    startWorker(5004, 1, 4)
     //    startWorker(5005, 1, 8)

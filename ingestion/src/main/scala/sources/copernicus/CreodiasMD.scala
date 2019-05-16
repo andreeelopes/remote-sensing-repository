@@ -26,7 +26,7 @@ class CreodiasMDWork(override val source: CreodiasMDSource, productId: String, t
   extends Work(source) {
   //TODO platform as enum
 
-  val url = s"${source.baseUrl}/$platform/search.json?maxRecords=1&productIdentifier=%$title%"
+  val url = s"${source.baseUrl}/$platform/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
     implicit val origSender = context.sender
@@ -34,7 +34,7 @@ class CreodiasMDWork(override val source: CreodiasMDSource, productId: String, t
     AkkaHTTP.singleRequest(url).onComplete {
       case Success(response) =>
 
-        Unmarshal(response.entity).to[String].onComplete {
+        Unmarshal(response.entity.withoutSizeLimit).to[String].onComplete {
           case Success(responseString) =>
 
             process(responseString)
