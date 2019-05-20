@@ -133,7 +133,6 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
         changeWorkerToIdle(workerId, workId)
         persist(WorkCompleted(workId, nextWork)) { event ⇒
           workState = workState.updated(event)
-          //          mediator ! DistributedPubSubMediator.Publish(ResultsTopic, WorkResult(workId, nextWork)) // TODO remove
           // Ack back to original sender
           sender ! MasterWorkerProtocol.Ack(workId)
           nextWork.foreach(work => self ! work) // recursive work

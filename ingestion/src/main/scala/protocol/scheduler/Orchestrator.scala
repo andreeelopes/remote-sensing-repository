@@ -6,8 +6,8 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
+import sources.Work
 import sources.copernicus.CopernicusOSearchSource
-import sources.{PeriodicWork, Work}
 import utils.Utils.getSentinelProductsToFetch
 
 object Orchestrator {
@@ -41,8 +41,11 @@ class Orchestrator extends Actor with ActorLogging {
     name = "masterProxy")
 
   getSentinelProductsToFetch(config).foreach { p =>
-    val copernicus = new CopernicusOSearchSource(config, p.platform, p.productType)
-    copernicus.start
+
+    p.productType.foreach { pt =>
+      val copernicus = new CopernicusOSearchSource(config, p.program, p.platform, pt)
+      copernicus.start
+    }
   }
 
   def receive = {
@@ -54,12 +57,12 @@ class Orchestrator extends Actor with ActorLogging {
     case Master.Ack(work) =>
       log.info("Got ack for workId {}", work.workId)
 
-      //TODO possible problems because of timers
-      work match {
-        case pw: PeriodicWork =>
-          if (!pw.isEpoch)
-            scheduler.scheduleOnce(pw.source.fetchingFrequency, self, ProduceWork(pw.generatePeriodicWork()))
-      }
+    //      //TODO possible problems because of timers
+    //      work match {
+    //        case pw: PeriodicWork =>
+    //          if (!pw.isEpoch)
+    //            scheduler.scheduleOnce(pw.source.fetchingFrequency, self, ProduceWork(pw.generatePeriodicWork()))
+    //      }
 
     case NotOk(work) =>
       log.info("Work {} not accepted, retry after a while", work.workId)

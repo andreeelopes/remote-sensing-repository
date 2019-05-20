@@ -19,6 +19,7 @@ import scala.util.{Failure, Success}
 
 
 class CopernicusOSearchSource(val config: Config,
+                              val program: String,
                               val platform: String,
                               val productType: String)
   extends PeriodicRESTSource("copernicus.copernicus-oah-opensearch", config) {
@@ -36,7 +37,6 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
                             override val pageStart: Int = 0)
   extends PeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
 
-  //TODO order by new to old, add more parameters
   override val url = s"${source.baseUrl}start=$pageStart&rows=${source.pageSize}&" +
     s"q=ingestiondate:[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]" +
     s"%20AND%20producttype:${source.productType}"
@@ -76,8 +76,8 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     (doc \ "feed" \ "entry").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
 
-    writeFile(s"data/($pageStart)-(${source.productType})-copernicus-osearch", docJson)
-    //    writeFile(s"data/(${ingestionDates._1})-(${ingestionDates._2})-($pageStart)-(${source.productType})-copernicus-osearch",compact(render(doc)))
+    writeFile(s"data/($pageStart)-(${source.productType})-copernicus-osearch.json", docJson)
+    //    writeFile(s"data/(${ingestionDates._1})-(${ingestionDates._2})-($pageStart)-(${source.productType})-copernicus-osearch.json",docJson)
 
     workToBeDone
   }
@@ -88,15 +88,26 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val title = (node \ "title").as[String]
     new File(s"data/$productId").mkdirs() //TODO data harcoded
 
-    List(
-      new CopernicusManifestWork(
-        new CopernicusManifestSource(source.config, source.platform, source.productType),
-        productId,
-        title
-      ),
-
-      new CreodiasMDWork(new CreodiasMDSource(source.config), productId, title, source.platform)
+    generateCreodiasWork(productId, title) ::: List(new CopernicusManifestWork(
+      new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
+      productId,
+      title)
     )
+
+  }
+
+  private def generateCreodiasWork(productId: String, title: String) = {
+    val creodiasConfigName = "creodias.creodias-odata"
+    val creodiasBaseUrl = source.config.getString(s"sources.$creodiasConfigName.base-url")
+    val creodiasUrl = s"$creodiasBaseUrl/${source.platform}/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
+
+    val creodiasExt =
+      getAllExtractions(source.config, creodiasConfigName, source.program, source.platform.toLowerCase, source.productType)
+
+    if (creodiasExt.nonEmpty)
+      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt), creodiasUrl, productId))
+    else
+      List()
   }
 
 

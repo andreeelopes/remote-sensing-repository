@@ -7,8 +7,6 @@ import utils.Utils
 
 import scala.concurrent.duration._
 
-case class ExtractionEntry(name: String, queryType: String, resultType: String,
-                           query: String, docContext: String, destPath: String, api: String)
 
 abstract class Source(configName: String, config: Config) extends Serializable {
 
@@ -16,6 +14,7 @@ abstract class Source(configName: String, config: Config) extends Serializable {
   val workTimeout = config.getDuration(s"sources.$configName.work-timeout").getSeconds.seconds
   val retryInterval = config.getDuration(s"sources.$configName.retry-interval").getSeconds.seconds
   val retryTimeout = config.getDuration(s"sources.$configName.retry-timeout").getSeconds.seconds
+
 
 }
 
@@ -25,7 +24,6 @@ abstract class Work(val source: Source) extends Serializable {
   val workId = Utils.generateUUID()
 
   def execute()(implicit context: ActorContext, mat: ActorMaterializer)
-
 
 }
 
