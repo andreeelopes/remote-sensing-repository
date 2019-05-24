@@ -6,9 +6,8 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
-import sources.Work
-import sources.copernicus.CopernicusOSearchSource
-import utils.Utils.getSentinelProductsToFetch
+import sources.{CopernicusOSearchSource, EarthExplorerSource, Work}
+import utils.Utils.productsToFetch
 
 object Orchestrator {
 
@@ -40,11 +39,17 @@ class Orchestrator extends Actor with ActorLogging {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  getSentinelProductsToFetch(config).foreach { p =>
-
+  productsToFetch(config, "copernicus.copernicus-oah-opensearch").foreach { p =>
     p.productType.foreach { pt =>
       val copernicus = new CopernicusOSearchSource(config, p.program, p.platform, pt)
       copernicus.start
+    }
+  }
+
+  productsToFetch(config, "earth-explorer").foreach { p =>
+    p.productType.foreach { pt =>
+      val earthExplorer = new EarthExplorerSource(config, p.program, p.platform, pt)
+      earthExplorer.start
     }
   }
 

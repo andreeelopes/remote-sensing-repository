@@ -57,9 +57,9 @@ object Utils {
   }
 
 
-  def getSentinelProductsToFetch(config: Config) = {
+  def productsToFetch(config: Config, configName: String) = {
 
-    config.getConfigList(s"sources.copernicus.copernicus-oah-opensearch.products").asScala.toList.map { entry =>
+    config.getConfigList(s"sources.$configName.products").asScala.toList.map { entry =>
       ProductEntry(
         entry.getString("program"),
         entry.getString("platform"),

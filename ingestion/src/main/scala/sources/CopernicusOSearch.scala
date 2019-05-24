@@ -1,4 +1,4 @@
-package sources.copernicus
+package sources
 
 import java.io.File
 
@@ -10,7 +10,6 @@ import org.joda.time.DateTime
 import org.json.XML
 import play.api.libs.json.{JsObject, JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
-import sources._
 import utils.AkkaHTTP
 import utils.Utils._
 

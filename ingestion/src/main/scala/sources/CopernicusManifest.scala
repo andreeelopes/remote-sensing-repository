@@ -1,4 +1,4 @@
-package sources.copernicus
+package sources
 
 import akka.actor.ActorContext
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -8,7 +8,6 @@ import com.typesafe.config.Config
 import net.minidev.json.JSONArray
 import play.api.libs.json.{JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
-import sources._
 import utils.AkkaHTTP
 import utils.ParsingUtils.processExtractions
 import utils.Utils._
@@ -116,7 +115,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
     Json.parse(result)
       .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "/", "", "./data/(productId)/(filename)", "copernicus-odata"))
+      .map(id => Extraction(id, "file", "undefined", "$", "", "./data/(productId)/(filename)", ""))
 
   }
 

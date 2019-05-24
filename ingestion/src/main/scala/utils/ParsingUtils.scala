@@ -2,6 +2,7 @@ package utils
 
 import java.nio.charset.StandardCharsets
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
 import com.jayway.jsonpath.{Configuration, JsonPath}
 import net.minidev.json.JSONArray
@@ -10,6 +11,8 @@ import org.json.XML
 import play.api.libs.json.{JsValue, Json}
 import sources.Extraction
 import utils.Utils.{dateFormat, writeFile}
+
+import scala.util.{Failure, Success, Try}
 
 object ParsingUtils {
   val jsonConf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider()).build()
@@ -43,7 +46,7 @@ object ParsingUtils {
         case _ =>
           val destPathQuery = e.destPath
             .replace("(productId)", productId)
-            .replace("(filename)", filename)
+            .replace("(filename)", s"query-$filename")
 
           processFile(response.left.get, e, destPathQuery, url)
       }
@@ -62,7 +65,7 @@ object ParsingUtils {
     val queryJson = generateQueryJsonFile(updatedExtraction, url)
 
     writeFile(destPath, responseBytes)
-    writeFile(destPathQuery, queryJson.toString)
+    writeFile(s"$destPathQuery.json", queryJson.toString)
   }
 
   private def processFile(doc: String, extraction: Extraction, destPathQuery: String, url: String) = {
@@ -109,10 +112,25 @@ object ParsingUtils {
   private def processSingleValue(docStr: String, extraction: Extraction, destPathQuery: String, url: String) = {
 
     val value = extraction.resultType match {
-      case "string" => JsonPath.read[String](docStr, extraction.query).toString
-      case "int" => JsonPath.read[Int](docStr, extraction.query).toString
-      case "float" => JsonPath.read[Float](docStr, extraction.query).toString
-      case "boolean" => JsonPath.read[Boolean](docStr, extraction.query).toString
+      case "string" =>
+        Try(JsonPath.read[String](docStr, extraction.query).toString) match {
+          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
+          case Success(v) => v
+        }
+      case "int" =>
+        Try(JsonPath.read[Int](docStr, extraction.query).toString) match {
+          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asInt.toString
+          case Success(v) => v.toString
+        }
+      case "double" => Try(JsonPath.read[Double](docStr, extraction.query).toString) match {
+        case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asDouble.toString
+        case Success(v) => v.toString
+      }
+      case "boolean" =>
+        Try(JsonPath.read[Boolean](docStr, extraction.query).toString) match {
+          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asBoolean.toString
+          case Success(v) => v.toString
+        }
       case _ =>
         val conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider()).build()
 
@@ -131,13 +149,14 @@ object ParsingUtils {
   }
 
   private def generateQueryJson(extraction: Extraction, url: String, result: String) = {
+    val adaptedQuotesUrl = url.replace("\"", "\\\"")
     Json.parse(
       s"""
     {
       "query" : {
         "name" : "${extraction.name}",
         "date" : "${new DateTime().toString(dateFormat)}",
-        "url" : "$url",
+        "url" : "$adaptedQuotesUrl",
         "expression" : "${extraction.query}",
         "context" : "${extraction.context}",
         "context-format" : "${extraction.contextFormat}"
@@ -166,7 +185,6 @@ object ParsingUtils {
     val jsonFragment = s""""value" : [$multiValues]"""
 
     generateQueryJson(extraction, url, jsonFragment)
-
   }
 
   private def parseFile(responseBytes: Array[Byte], extractions: List[Extraction]) = {
@@ -180,6 +198,7 @@ object ParsingUtils {
       case _ =>
         Left(responseBytes)
     }
+
   }
 
 }
