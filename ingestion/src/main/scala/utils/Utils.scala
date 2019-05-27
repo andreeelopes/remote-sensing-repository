@@ -32,13 +32,11 @@ object Utils {
   }
 
   def getAllExtractions(config: Config, configName: String, program: String = "-1", platform: String = "-1", productType: String = "-1") = {
-
     val programExt = Try(getExtractions(config, s"$configName.$program")).getOrElse(List())
     val platformExt = Try(getExtractions(config, s"$configName.$platform")).getOrElse(List())
     val productTypeSpecificExt = Try(getExtractions(config, s"$configName.$productType")).getOrElse(List())
 
     getExtractions(config, s"$configName") ::: programExt ::: platformExt ::: productTypeSpecificExt
-
   }
 
   def getExtractions(config: Config, configName: String) = {

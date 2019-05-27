@@ -1,6 +1,7 @@
 package sources
 
 import java.io.File
+import java.nio.charset.StandardCharsets
 
 import akka.actor.ActorContext
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -11,6 +12,7 @@ import org.json.XML
 import play.api.libs.json.{JsObject, JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
 import utils.AkkaHTTP
+import utils.ParsingUtils.processExtractions
 import utils.Utils._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,6 +29,8 @@ class CopernicusOSearchSource(val config: Config,
   val authConfigOpt = Some(AuthConfig(configName, config))
   val epochInitialWork = new CopernicusOSearchWork(this, ingestionHistoryDates, isEpoch = true)
   val periodicInitialWork = new CopernicusOSearchWork(this, initialIngestion)
+
+  val extractions = getAllExtractions(config, configName, program, platform.toLowerCase, productType)
 }
 
 
@@ -53,10 +57,10 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     AkkaHTTP.singleRequest(url, source.authConfigOpt).onComplete {
       case Success(response) =>
 
-        Unmarshal(response.entity.withoutSizeLimit).to[String].onComplete {
-          case Success(responseString) =>
+        Unmarshal(response.entity.withoutSizeLimit).to[Array[Byte]].onComplete {
+          case Success(responseBytes) =>
 
-            val workToBeDone = process(XML.toJSONObject(responseString).toString(3))
+            val workToBeDone = process(responseBytes)
 
             origSender ! WorkComplete(workToBeDone)
 
@@ -67,7 +71,8 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
   }
 
-  private def process(docJson: String): List[Work] = {
+  private def process(responseBytes: Array[Byte]): List[Work] = {
+    val docJson = XML.toJSONObject(new String(responseBytes, StandardCharsets.UTF_8)).toString
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
@@ -86,6 +91,11 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val productId = (node \ "id").as[String]
     val title = (node \ "title").as[String]
     new File(s"data/$productId").mkdirs() //TODO data harcoded
+
+
+    val auxExt = source.extractions.map(e => e.copy(contextFormat = "json"))
+
+    processExtractions(node.toString.getBytes(StandardCharsets.UTF_8), auxExt, productId, url)
 
     generateCreodiasWork(productId, title) ::: List(new CopernicusManifestWork(
       new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),

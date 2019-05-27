@@ -37,7 +37,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
   extends PeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
 
   override val url =
-    s"""${source.baseUrl}search?jsonRequest={"apiKey":"2a67460ea24b4a359671add69a84188a","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
+    s"""${source.baseUrl}search?jsonRequest={"apiKey":"d38f776d53864d8492206d99b81a447c","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
 
 
   def execute()(implicit context: ActorContext, mat: ActorMaterializer) = {
@@ -88,7 +88,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
   }
 
   private def generateEEMetadataWork(entityId: String) = {
-    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"2a67460ea24b4a359671add69a84188a","datasetName":"${source.productType}","entityIds":"$entityId"}"""
+    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"d38f776d53864d8492206d99b81a447c","datasetName":"${source.productType}","entityIds":"$entityId"}"""
 
     val mdExt = source.extractions.filter(e => e.name == "metadata" || e.context == "metadata")
 

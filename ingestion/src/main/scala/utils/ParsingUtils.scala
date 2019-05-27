@@ -112,24 +112,23 @@ object ParsingUtils {
   private def processSingleValue(docStr: String, extraction: Extraction, destPathQuery: String, url: String) = {
 
     val value = extraction.resultType match {
-      case "string" =>
-        Try(JsonPath.read[String](docStr, extraction.query).toString) match {
-          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
-          case Success(v) => v
-        }
-      case "int" =>
-        Try(JsonPath.read[Int](docStr, extraction.query).toString) match {
-          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asInt.toString
-          case Success(v) => v.toString
-        }
-      case "double" => Try(JsonPath.read[Double](docStr, extraction.query).toString) match {
-        case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asDouble.toString
-        case Success(v) => v.toString
-      }
-      case "boolean" =>
-        Try(JsonPath.read[Boolean](docStr, extraction.query).toString) match {
-          case Failure(_) => JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asBoolean.toString
-          case Success(v) => v.toString
+      case "string" | "int" | "double" | "boolean" =>
+
+        try {
+
+
+          Try(JsonPath.read[String](docStr, extraction.query).toString) match {
+            case Failure(_) =>
+              // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
+              JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
+            case Success(v) => v
+          }
+
+        } catch {
+          case e: Exception => e.printStackTrace()
+            println(extraction)
+            println("####")
+            ""
         }
       case _ =>
         val conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider()).build()
