@@ -7,8 +7,10 @@ import akka.actor.ActorContext
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import mongo.MongoDAO
 import org.joda.time.DateTime
 import org.json.XML
+import org.mongodb.scala._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
 import utils.AkkaHTTP
@@ -90,8 +92,9 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     val productId = (node \ "id").as[String]
     val title = (node \ "title").as[String]
-    new File(s"data/$productId").mkdirs() //TODO data harcoded
+    new File(s"data/$productId").mkdirs() // TODO data harcoded
 
+    MongoDAO.insertDoc(Document("_id" -> productId))
 
     val auxExt = source.extractions.map(e => e.copy(contextFormat = "json"))
 

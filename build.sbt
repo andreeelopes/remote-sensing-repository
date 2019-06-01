@@ -65,6 +65,9 @@ lazy val dependencies =
     val json = "org.json" % "json" % "20180813"
     val jsonPath = "com.jayway.jsonpath" % "json-path" % "2.4.0"
 
+    val jts = "org.locationtech.jts.io" % "jts-io-common" % "1.16.1"
+
+    val mongo = "org.mongodb.scala" %% "mongo-scala-driver" % "2.6.0"
 
   }
 
@@ -85,7 +88,9 @@ lazy val commonDependencies = Seq(
   dependencies.kryo,
   dependencies.jsonPath,
   dependencies.playJson,
-  dependencies.json
+  dependencies.json,
+  dependencies.jts,
+  dependencies.mongo
 )
 
 // SETTINGS

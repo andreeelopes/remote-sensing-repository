@@ -13,8 +13,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 
-case class Extraction(name: String, queryType: String, resultType: String,
-                      query: String, context: String, destPath: String, contextFormat: String)
+case class Extraction(name: String, queryType: String, resultType: String, resultTypeAftrTransf: String,
+                      query: String, context: String, destPath: String,
+                      contextFormat: String, metamodelMapping: String)
 
 
 class ExtractionSource(config: Config,

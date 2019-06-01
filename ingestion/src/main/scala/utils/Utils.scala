@@ -46,10 +46,12 @@ object Utils {
         entry.getString("name"),
         entry.getString("query-type"),
         entry.getString("result-type"),
+        Try(entry.getString("result-type-transformation")).getOrElse(entry.getString("result-type")),
         entry.getString("query"),
         entry.getString("context"),
         entry.getString("dest-path"),
-        entry.getString("context-format")
+        entry.getString("context-format"),
+        entry.getString("metamodel-mapping")
       )
     }
   }

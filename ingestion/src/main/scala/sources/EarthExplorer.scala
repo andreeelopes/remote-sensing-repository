@@ -6,7 +6,9 @@ import akka.actor.ActorContext
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import mongo.MongoDAO
 import org.joda.time.DateTime
+import org.mongodb.scala.Document
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import protocol.worker.WorkExecutor.WorkComplete
 import utils.AkkaHTTP
@@ -37,7 +39,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
   extends PeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
 
   override val url =
-    s"""${source.baseUrl}search?jsonRequest={"apiKey":"d38f776d53864d8492206d99b81a447c","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
+    s"""${source.baseUrl}search?jsonRequest={"apiKey":"b07e9cc604c74535be9cd028e5d1c0e4","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
 
 
   def execute()(implicit context: ActorContext, mat: ActorMaterializer) = {
@@ -68,7 +70,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    //        getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
     (doc \ "data" \ "results").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry)) //TODO headopt
 
@@ -83,12 +85,14 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
     val entityId = (node \ "entityId").as[String]
     new File(s"data/$entityId").mkdirs() //TODO data harcoded, insert sentinel/sentinel1/product
 
+    MongoDAO.insertDoc(Document("_id" -> entityId))
+
     generateEEMetadataWork(entityId)
 
   }
 
   private def generateEEMetadataWork(entityId: String) = {
-    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"d38f776d53864d8492206d99b81a447c","datasetName":"${source.productType}","entityIds":"$entityId"}"""
+    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"b07e9cc604c74535be9cd028e5d1c0e4","datasetName":"${source.productType}","entityIds":"$entityId"}"""
 
     val mdExt = source.extractions.filter(e => e.name == "metadata" || e.context == "metadata")
 
@@ -98,6 +102,10 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
       List()
   }
 
+  def generatePeriodicWork() = {
+    val updatedIngestionWindow = source.adjustIngestionWindow(ingestionDates)
+    new EarthExplorerWork(source, updatedIngestionWindow)
+  }
 
   private def getNextPagesWork(doc: JsValue): Option[Work] = {
     val nextRecord = (doc \ "data" \ "nextRecord").as[JsValue]
@@ -106,11 +114,6 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
       Some(new EarthExplorerWork(source, ingestionDates, isEpoch, pageStart + source.pageSize))
     else
       None
-  }
-
-  def generatePeriodicWork() = {
-    val updatedIngestionWindow = source.adjustIngestionWindow(ingestionDates)
-    new EarthExplorerWork(source, updatedIngestionWindow)
   }
 
 }

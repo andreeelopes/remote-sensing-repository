@@ -115,7 +115,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
     Json.parse(result)
       .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "$", "", "./data/(productId)/(filename)", ""))
+      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping))
 
   }
 

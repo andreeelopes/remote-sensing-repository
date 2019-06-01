@@ -9,7 +9,7 @@ import net.minidev.json.JSONArray
 import org.joda.time.DateTime
 import org.json.XML
 import play.api.libs.json.{JsValue, Json}
-import sources.Extraction
+import sources.{Extraction, Transformations}
 import utils.Utils.{dateFormat, writeFile}
 
 import scala.util.{Failure, Success, Try}
@@ -64,7 +64,8 @@ object ParsingUtils {
     val updatedExtraction = extraction.copy(destPath = destPath)
     val queryJson = generateQueryJsonFile(updatedExtraction, url)
 
-    writeFile(destPath, responseBytes)
+    val transformed = Transformations.transform(extraction, responseBytes).right.get
+    writeFile(destPath, transformed)
     writeFile(s"$destPathQuery.json", queryJson.toString)
   }
 
@@ -76,7 +77,9 @@ object ParsingUtils {
 
     val node = JsonPath.using(jsonConf).parse(doc).read[Object](extraction.query)
 
-    writeFile(destPath, node.toString)
+    val transformed = Transformations.transform(extraction, node).left.get
+
+    writeFile(destPath, transformed.head)
     writeFile(destPathQuery, queryJson.toString)
   }
 
@@ -92,7 +95,8 @@ object ParsingUtils {
     resultJson.foreach { node =>
       val destPathI = destPathQuery.replace("query-", s"(${destPaths.size})-")
       destPaths ::= destPathI
-      writeFile(destPathI, node.toString)
+      val transformed = Transformations.transform(extraction, node).left.get
+      writeFile(destPathI, transformed.head)
     }
 
     val queryJson = generateQueryJsonMultiFile(extraction, destPaths, url)
@@ -114,21 +118,11 @@ object ParsingUtils {
     val value = extraction.resultType match {
       case "string" | "int" | "double" | "boolean" =>
 
-        try {
-
-
-          Try(JsonPath.read[String](docStr, extraction.query).toString) match {
-            case Failure(_) =>
-              // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
-              JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
-            case Success(v) => v
-          }
-
-        } catch {
-          case e: Exception => e.printStackTrace()
-            println(extraction)
-            println("####")
-            ""
+        Try(JsonPath.read[String](docStr, extraction.query).toString) match {
+          case Failure(_) =>
+            // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
+            JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
+          case Success(v) => v
         }
       case _ =>
         val conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider()).build()
@@ -136,21 +130,25 @@ object ParsingUtils {
         JsonPath.using(conf).parse(docStr).read[Object](extraction.query).toString
     }
 
-    val queryJson = generateQueryJsonSingleValue(extraction, value, url)
+    val transformed = Transformations.transform(extraction, value).left.get.head
+
+    val queryJson = generateQueryJsonSingleValue(extraction, transformed, url)
     writeFile(destPathQuery, queryJson.toString)
 
   }
 
   private def generateQueryJsonSingleValue(extraction: Extraction, value: String, url: String) = {
-    val auxValue = if (extraction.resultType == "string") s""""$value"""" else value
+    val auxValue = if (extraction.resultTypeAftrTransf == "string") s""""$value"""" else value
 
     generateQueryJson(extraction, url, s""""value" : $auxValue""")
   }
 
   private def generateQueryJson(extraction: Extraction, url: String, result: String) = {
     val adaptedQuotesUrl = url.replace("\"", "\\\"")
-    Json.parse(
-      s"""
+
+    try {
+      Json.parse(
+        s"""
     {
       "query" : {
         "name" : "${extraction.name}",
@@ -163,25 +161,37 @@ object ParsingUtils {
       "result" : {
         "type" : "${extraction.resultType}",
         $result
-      }
+      },
+      "metamodel-mapping" : "${extraction.metamodelMapping}"
     }"""
-    )
+      )
+    } catch {
+      case e: Exception => e.printStackTrace()
+        println(result)
+        println("####")
+        ""
+    }
+
 
   }
 
   private def processMultiValue(doc: String, extraction: Extraction, destPathQuery: String, url: String) = {
 
     val result = JsonPath.read[JSONArray](doc, extraction.query).toJSONString
-    val resultJson = Json.parse(result).as[List[JsValue]].map(node => node.toString())
+    val resultJson = Json.parse(result).as[List[JsValue]]
+      .map(node => node.toString())
 
-    val queryJson = generateQueryJsonMultiValue(extraction, resultJson, url)
+    val resultJsonStr = if (extraction.resultTypeAftrTransf == "string") resultJson.map(nodeStr => s""""$nodeStr"""") else resultJson
+
+    val transformed = Transformations.transform(extraction, resultJsonStr).left.get.mkString(",")
+
+    val queryJson = generateQueryJsonMultiValue(extraction, transformed, url)
+
     writeFile(destPathQuery, queryJson.toString)
   }
 
-  private def generateQueryJsonMultiValue(extraction: Extraction, values: List[String], url: String) = {
-
-    val multiValues = values.mkString(",")
-    val jsonFragment = s""""value" : [$multiValues]"""
+  private def generateQueryJsonMultiValue(extraction: Extraction, values: String, url: String) = {
+    val jsonFragment = s""""value" : [$values]"""
 
     generateQueryJson(extraction, url, jsonFragment)
   }
