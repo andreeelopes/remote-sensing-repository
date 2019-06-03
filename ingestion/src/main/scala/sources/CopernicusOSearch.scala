@@ -100,11 +100,12 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     processExtractions(node.toString.getBytes(StandardCharsets.UTF_8), auxExt, productId, url)
 
-    generateCreodiasWork(productId, title) ::: List(new CopernicusManifestWork(
-      new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
-      productId,
-      title)
-    )
+    generateCreodiasWork(productId, title) //::: TODO
+//      List(new CopernicusManifestWork(
+//      new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
+//      productId,
+//      title)
+//    )
 
   }
 

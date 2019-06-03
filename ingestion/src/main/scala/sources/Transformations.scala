@@ -3,6 +3,7 @@ package sources
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.locationtech.jts.io.WKTReader
 import org.locationtech.jts.io.geojson.GeoJsonWriter
+import play.api.libs.json.JsValue
 import utils.Utils
 
 
@@ -10,28 +11,20 @@ object Transformations {
   val dtf1 = DateTimeFormat.forPattern("YYYY:DDD:HH:mm:ss.SSSSSSS")
   val dtf2 = DateTimeFormat.forPattern("YYYY-MM-dd")
 
-  def transform(extraction: Extraction, value: Any): Either[List[String], Array[Byte]] = {
+  def transform(extraction: Extraction, value: Any) = {
     extraction.name match {
-      case "footprint" => Left(List(footprintTransformation(value.asInstanceOf[String])))
-      case "spatialFootprint" => Left(List(removeFirstAndLast(value.asInstanceOf[String])))
+      case "footprint" => Left(footprintTransformation(value.asInstanceOf[String]))
+      case "spatialFootprint" => Left(removeFirstAndLast(value.asInstanceOf[JsValue]))
       case "stop_time" | "start_time" | "Acquisition Start Date" | "Acquisition End Date" =>
-        Left(List(standardizeDate(value.asInstanceOf[String], dtf1)))
-      case "acquisitionDate" => Left(List(standardizeDate(value.asInstanceOf[String], dtf2)))
-
-      case _ => value match {
-        case a: Array[Byte] => Right(a)
-        case l: List[String] => Left(l)
-        case _ => Left(List(value.toString))
-      }
+        Left(standardizeDate(value.asInstanceOf[String], dtf1))
+      case "acquisitionDate" => Left(standardizeDate(value.asInstanceOf[String], dtf2))
+      case _ => value
     }
   }
 
   def footprintTransformation(value: String) = {
-
     val geometry = new WKTReader().read(value)
-
     val geojson = new GeoJsonWriter().write(geometry)
-
     geojson
   }
 

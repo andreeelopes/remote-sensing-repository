@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider
 import com.jayway.jsonpath.{Configuration, JsonPath}
+import mongo.MongoDAO
 import net.minidev.json.JSONArray
 import org.joda.time.DateTime
 import org.json.XML
@@ -30,25 +31,25 @@ object ParsingUtils {
             .replace("(filename)", filename)
             .replace("xml", "json") //only applies to xml files
 
-          processFile(response.right.get, e, destPathQuery, url)
+          processFile(response.right.get, e, destPathQuery, url, productId)
         case "multi-file" =>
           val destPathQuery = e.destPath.replace("(productId)", productId)
-          processMultiFile(response.right.get, e, destPathQuery, url)
+          processMultiFile(response.right.get, e, destPathQuery, url, productId)
         case "single-value" =>
           val destPathQuery = e.destPath.replace("(productId)", productId)
-          processSingleValue(response.right.get, e, destPathQuery, url)
+          processSingleValue(response.right.get, e, destPathQuery, url, productId)
         case "multi-value" =>
           val destPathQuery = e.destPath
             .replace("(productId)", productId)
             .replace("xml", "json") //only applies to xml files
 
-          processMultiValue(response.right.get, e, destPathQuery, url)
+          processMultiValue(response.right.get, e, destPathQuery, url, productId)
         case _ =>
           val destPathQuery = e.destPath
             .replace("(productId)", productId)
             .replace("(filename)", s"query-$filename")
 
-          processFile(response.left.get, e, destPathQuery, url)
+          processFile(response.left.get, e, destPathQuery, url, productId)
       }
     }
 
@@ -58,7 +59,8 @@ object ParsingUtils {
   private def processFile(responseBytes: Array[Byte],
                           extraction: Extraction,
                           destPathQuery: String,
-                          url: String) = {
+                          url: String,
+                          productId: String) = {
     val destPath = destPathQuery.replace("query-", "")
 
     val updatedExtraction = extraction.copy(destPath = destPath)
@@ -69,7 +71,7 @@ object ParsingUtils {
     writeFile(s"$destPathQuery.json", queryJson.toString)
   }
 
-  private def processFile(doc: String, extraction: Extraction, destPathQuery: String, url: String) = {
+  private def processFile(doc: String, extraction: Extraction, destPathQuery: String, url: String, productId: String) = {
     val destPath = destPathQuery.replace("query-", "")
 
     val updatedExtraction = extraction.copy(destPath = destPath)
@@ -87,7 +89,7 @@ object ParsingUtils {
     generateQueryJson(extraction, url, s""""value" : "${extraction.destPath}"""")
   }
 
-  private def processMultiFile(docStr: String, extraction: Extraction, destPathQuery: String, url: String) = {
+  private def processMultiFile(docStr: String, extraction: Extraction, destPathQuery: String, url: String, productId: String) = {
     val result = JsonPath.read[JSONArray](docStr, extraction.query).toJSONString
     val resultJson = Json.parse(result).as[List[JsValue]]
 
@@ -113,10 +115,10 @@ object ParsingUtils {
     generateQueryJson(extraction, url, jsonFragment)
   }
 
-  private def processSingleValue(docStr: String, extraction: Extraction, destPathQuery: String, url: String) = {
+  private def processSingleValue(docStr: String, extraction: Extraction, destPathQuery: String, url: String, productId: String) = {
 
     val value = extraction.resultType match {
-      case "string" | "int" | "double" | "boolean" =>
+      case "string" =>
 
         Try(JsonPath.read[String](docStr, extraction.query).toString) match {
           case Failure(_) =>
@@ -124,13 +126,44 @@ object ParsingUtils {
             JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asText
           case Success(v) => v
         }
+
+      case "int" =>
+
+        Try(JsonPath.read[Int](docStr, extraction.query).toString) match {
+          case Failure(_) =>
+            // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
+            JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asInt
+          case Success(v) => v
+        }
+
+      case "double" =>
+
+        Try(JsonPath.read[Double](docStr, extraction.query).toString) match {
+          case Failure(_) =>
+            // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
+            JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asDouble
+          case Success(v) => v
+        }
+
+      case "boolean" =>
+
+        Try(JsonPath.read[Boolean](docStr, extraction.query).toString) match {
+          case Failure(_) =>
+            // metadataFields[?(@.fieldName=='Landsat Product Identifier')][0].value <- [][] impossible with this lib
+            JsonPath.using(jsonConf).parse(docStr).read[ArrayNode](extraction.query).get(0).asBoolean
+          case Success(v) => v
+        }
+
       case _ =>
         val conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider()).build()
 
-        JsonPath.using(conf).parse(docStr).read[Object](extraction.query).toString
+        val obj = JsonPath.using(conf).parse(docStr).read[Object](extraction.query)
+        Json.parse(obj.toString)
     }
 
-    val transformed = Transformations.transform(extraction, value).left.get.head
+    val transformed = Transformations.transform(extraction, value)
+
+    MongoDAO.addFieldToDoc(productId, extraction.metamodelMapping, transformed)
 
     val queryJson = generateQueryJsonSingleValue(extraction, transformed, url)
     writeFile(destPathQuery, queryJson.toString)
@@ -175,7 +208,7 @@ object ParsingUtils {
 
   }
 
-  private def processMultiValue(doc: String, extraction: Extraction, destPathQuery: String, url: String) = {
+  private def processMultiValue(doc: String, extraction: Extraction, destPathQuery: String, url: String, productId: String) = {
 
     val result = JsonPath.read[JSONArray](doc, extraction.query).toJSONString
     val resultJson = Json.parse(result).as[List[JsValue]]
