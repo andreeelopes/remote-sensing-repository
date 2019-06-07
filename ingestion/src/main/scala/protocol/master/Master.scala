@@ -219,7 +219,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
 
   def newStaleWorkerDeadline(): Deadline = considerWorkerDeadAfter.fromNow
 
-  def tooLongSinceHeardFrom(lastHeardFrom: Long) =
+  def tooLongSinceHeardFrom(lastHeardFrom: Long):Boolean =
     System.currentTimeMillis() - lastHeardFrom > considerWorkerDeadAfter.toMillis
 
 }

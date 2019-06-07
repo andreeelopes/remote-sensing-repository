@@ -22,7 +22,7 @@ class WorkExecutor extends Actor with ActorLogging {
 
   import WorkExecutor._
 
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
 
   def receive = {

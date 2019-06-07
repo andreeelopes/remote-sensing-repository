@@ -1,39 +1,28 @@
 package sources
 
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.locationtech.jts.io.WKTReader
 import org.locationtech.jts.io.geojson.GeoJsonWriter
-import play.api.libs.json.JsValue
-import utils.Utils
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 
 object Transformations {
-  val dtf1 = DateTimeFormat.forPattern("YYYY:DDD:HH:mm:ss.SSSSSSS")
-  val dtf2 = DateTimeFormat.forPattern("YYYY-MM-dd")
 
-  def transform(extraction: Extraction, value: Any) = {
+  def transform(extraction: Extraction, value: Any): Any = {
     extraction.name match {
-      case "footprint" => Left(footprintTransformation(value.asInstanceOf[String]))
-      case "spatialFootprint" => Left(removeFirstAndLast(value.asInstanceOf[JsValue]))
-      case "stop_time" | "start_time" | "Acquisition Start Date" | "Acquisition End Date" =>
-        Left(standardizeDate(value.asInstanceOf[String], dtf1))
-      case "acquisitionDate" => Left(standardizeDate(value.asInstanceOf[String], dtf2))
+      case "footprint" => footprintTransformation(value.asInstanceOf[String])
+      case "spatialFootprint" => removeFirstAndLast(value.asInstanceOf[JsValue])
       case _ => value
     }
   }
 
-  def footprintTransformation(value: String) = {
+  def footprintTransformation(value: String): String = {
     val geometry = new WKTReader().read(value)
     val geojson = new GeoJsonWriter().write(geometry)
-    geojson
+
+    (Json.parse(geojson).as[JsObject] - "crs").toString
   }
 
-  def removeFirstAndLast(value: String) = value.substring(1, value.length - 1)
-
-  def standardizeDate(value: String, dtf: DateTimeFormatter) = {
-    val date = dtf.parseDateTime(value) // TODO deal with timezones
-    date.toString(Utils.dateFormat)
-  }
+  def removeFirstAndLast(value: JsValue): String = value.toString.substring(1, value.toString.length - 1)
 
 
 }

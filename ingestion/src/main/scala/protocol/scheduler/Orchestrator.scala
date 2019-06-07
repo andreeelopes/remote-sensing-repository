@@ -31,11 +31,11 @@ class Orchestrator extends Actor with ActorLogging {
   import Orchestrator._
   import context._
 
-  val scheduler = context.system.scheduler
-  val config = context.system.settings.config
-  implicit val mat = ActorMaterializer()(context)
+  private val scheduler = context.system.scheduler
+  private val config = context.system.settings.config
+  implicit val mat: ActorMaterializer = ActorMaterializer()(context)
 
-  val masterProxy = context.actorOf(
+  private val masterProxy = context.actorOf(
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
@@ -80,7 +80,7 @@ class Orchestrator extends Actor with ActorLogging {
 
 
   def sendWork(work: Work): Unit = {
-    implicit val timeout = Timeout(work.source.retryTimeout)
+    implicit val timeout: Timeout = Timeout(work.source.retryTimeout)
     (masterProxy ? work).recover {
       case _ => NotOk(work)
     } pipeTo self

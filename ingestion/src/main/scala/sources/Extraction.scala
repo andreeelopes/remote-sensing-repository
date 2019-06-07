@@ -1,10 +1,11 @@
 package sources
 
-import akka.actor.ActorContext
+import akka.actor.{ActorContext, ActorRef}
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import org.joda.time.format.DateTimeFormatter
 import protocol.worker.WorkExecutor.WorkComplete
 import utils.AkkaHTTP
 import utils.ParsingUtils._
@@ -15,7 +16,7 @@ import scala.util.{Failure, Success}
 
 case class Extraction(name: String, queryType: String, resultType: String, resultTypeAftrTransf: String,
                       query: String, context: String, destPath: String,
-                      contextFormat: String, metamodelMapping: String)
+                      contextFormat: String, metamodelMapping: String,collection:String, dtfStr: String = null)
 
 
 class ExtractionSource(config: Config,
@@ -29,7 +30,7 @@ class ExtractionWork(override val source: ExtractionSource, url: String, product
 
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-    implicit val origSender = context.sender
+    implicit val origSender: ActorRef = context.sender
 
     AkkaHTTP.singleRequest(url, source.authConfig).onComplete {
       case Success(response) =>

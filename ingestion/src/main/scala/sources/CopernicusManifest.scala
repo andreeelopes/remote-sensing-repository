@@ -1,6 +1,6 @@
 package sources
 
-import akka.actor.ActorContext
+import akka.actor.{ActorContext, ActorRef}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.jayway.jsonpath.JsonPath
@@ -22,13 +22,13 @@ class CopernicusManifestSource(val config: Config, program: String, platform: St
 
   override val authConfigOpt = Some(AuthConfig(configName, config))
 
-  val baseUrl = config.getString(s"sources.$configName.base-url")
+  val baseUrl: String = config.getString(s"sources.$configName.base-url")
 
-  val extractions = getAllExtractions(config, configName, program, platform.toLowerCase, productType)
+  val extractions: List[Extraction] = getAllExtractions(config, configName, program, platform.toLowerCase, productType)
 
   //  mapping of manifest names
-  val manifestName = if (platform == "Sentinel3") "xfdumanifest.xml" else "manifest.safe"
-  val manifestFormat = if (platform == "Sentinel3") "SEN3" else "SAFE"
+  val manifestName: String = if (platform == "sentinel3") "xfdumanifest.xml" else "manifest.safe"
+  val manifestFormat: String = if (platform == "sentinel3") "SEN3" else "SAFE"
 
 }
 
@@ -37,9 +37,9 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
   val url = s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/Nodes('${source.manifestName}')/$$value"
 
-  override def execute()(implicit context: ActorContext, mat: ActorMaterializer) = {
+  override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
 
-    implicit val origSender = context.sender
+    implicit val origSender: ActorRef = context.sender
 
 
     AkkaHTTP.singleRequest(url, source.authConfigOpt).onComplete {
@@ -115,7 +115,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
     Json.parse(result)
       .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping))
+      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, ""))
 
   }
 

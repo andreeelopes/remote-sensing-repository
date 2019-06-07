@@ -25,12 +25,12 @@ class Worker(masterProxy: ActorRef)
   import context.dispatcher
 
 
-  val workerId = UUID.randomUUID().toString
-  val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
+  private val workerId = UUID.randomUUID().toString
+  private val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
 
-  val registerTask = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))
+  private val registerTask = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))
 
-  val workExecutor = createWorkExecutor()
+  private val workExecutor = createWorkExecutor()
 
   var currentWorkId: Option[String] = None
 
@@ -39,7 +39,7 @@ class Worker(masterProxy: ActorRef)
     case None => throw new IllegalStateException("Not working")
   }
 
-  def receive = idle
+  def receive: Receive = idle
 
   def idle: Receive = {
     case WorkIsReady =>
@@ -82,7 +82,7 @@ class Worker(masterProxy: ActorRef)
   // if it stops this worker will also be stopped
     context.watch(context.actorOf(WorkExecutor.props, s"work-executor-${self.path.name}"))
 
-  override def supervisorStrategy = OneForOneStrategy() {
+  override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
     case _: ActorInitializationException => Stop
     case _: Exception =>
       currentWorkId foreach { workId => masterProxy ! WorkFailed(workerId, workId) }

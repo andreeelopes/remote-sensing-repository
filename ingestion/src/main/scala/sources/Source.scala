@@ -10,10 +10,10 @@ import scala.concurrent.duration._
 
 abstract class Source(configName: String, config: Config) extends Serializable {
 
-  val description = config.getString(s"sources.$configName.description")
-  val workTimeout = config.getDuration(s"sources.$configName.work-timeout").getSeconds.seconds
-  val retryInterval = config.getDuration(s"sources.$configName.retry-interval").getSeconds.seconds
-  val retryTimeout = config.getDuration(s"sources.$configName.retry-timeout").getSeconds.seconds
+  val description: String = config.getString(s"sources.$configName.description")
+  val workTimeout: FiniteDuration = config.getDuration(s"sources.$configName.work-timeout").getSeconds.seconds
+  val retryInterval: FiniteDuration = config.getDuration(s"sources.$configName.retry-interval").getSeconds.seconds
+  val retryTimeout: FiniteDuration = config.getDuration(s"sources.$configName.retry-timeout").getSeconds.seconds
 
 
 }
@@ -21,7 +21,7 @@ abstract class Source(configName: String, config: Config) extends Serializable {
 
 abstract class Work(val source: Source) extends Serializable {
 
-  val workId = Utils.generateUUID()
+  val workId: String = Utils.generateUUID()
 
   def execute()(implicit context: ActorContext, mat: ActorMaterializer)
 
