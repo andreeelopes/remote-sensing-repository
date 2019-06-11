@@ -69,6 +69,7 @@ lazy val dependencies =
 
     val mongo = "org.mongodb.scala" %% "mongo-scala-driver" % "2.6.0"
 
+    val playWS = "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.4"
   }
 
 lazy val commonDependencies = Seq(
@@ -90,7 +91,8 @@ lazy val commonDependencies = Seq(
   dependencies.playJson,
   dependencies.json,
   dependencies.jts,
-  dependencies.mongo
+  dependencies.mongo,
+  dependencies.playWS
 )
 
 // SETTINGS

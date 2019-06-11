@@ -1,24 +1,24 @@
 package sources
 
 import akka.actor.{ActorContext, ActorRef}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.jayway.jsonpath.JsonPath
 import com.typesafe.config.Config
 import net.minidev.json.JSONArray
 import play.api.libs.json.{JsValue, Json}
-import protocol.worker.WorkExecutor.WorkComplete
-import utils.AkkaHTTP
+import utils.HTTPClient
 import utils.ParsingUtils.processExtractions
 import utils.Utils._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+object CopernicusManifest {
+  final val configName = "copernicus.copernicus-oah-odata"
+  final val manifestExt = "manifest"
+}
 
 class CopernicusManifestSource(val config: Config, program: String, platform: String, productType: String)
-  extends sources.Source("copernicus.copernicus-oah-odata", config) with AuthComponent {
+  extends sources.Source(CopernicusManifest.configName, config) with AuthComponent {
 
-  final val configName = "copernicus.copernicus-oah-odata"
+  final val configName = CopernicusManifest.configName
 
   override val authConfigOpt = Some(AuthConfig(configName, config))
 
@@ -38,37 +38,16 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
   val url = s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/Nodes('${source.manifestName}')/$$value"
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-
-    implicit val origSender: ActorRef = context.sender
-
-
-    AkkaHTTP.singleRequest(url, source.authConfigOpt).onComplete {
-      case Success(response) =>
-
-        Unmarshal(response.entity.withoutSizeLimit).to[Array[Byte]].onComplete {
-          case Success(responseBytes) =>
-
-            val workToBeDone = process(responseBytes)
-
-            origSender ! WorkComplete(workToBeDone)
-
-          case Failure(e) => context.self ! e
-            throw new Exception(e)
-        }
-
-      case Failure(e) => context.self ! e
-        throw new Exception(e)
-
-    }
-
+    HTTPClient.singleRequest(url, source.workTimeout, process, source.authConfigOpt)
   }
 
-  private def process(responseBytes: Array[Byte]) = {
+  override def process(responseBytes: Array[Byte]): List[Work] = {
     var workToBeDone = List[Work]()
     var extractions = List[Extraction]()
 
     // process manifest extractions
-    val manifestExtractions = source.extractions.filter(e => e.name == "manifest" || e.context == "manifest")
+    val manifestExtractions = source.extractions
+      .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
     val doc = processExtractions(responseBytes, manifestExtractions, productId, url).right.get
 
     // split container extractions into file extractions

@@ -4,7 +4,8 @@ import com.typesafe.config.Config
 import mongo.MongoDAO
 import org.joda.time.DateTime
 import org.mongodb.scala.Completed
-import org.mongodb.scala.bson.{BsonDocument, BsonInt64, BsonString}
+import org.mongodb.scala.bson.{BsonDocument, BsonInt64, BsonString, BsonValue}
+import play.api.libs.json.JsValue
 import utils.Utils.dateFormat
 
 
@@ -20,24 +21,20 @@ abstract class PeriodicRESTWork(override val source: PeriodicRESTSource,
 
   val url: String
 
-  //  def process: List[Work]
+  def getNextPagesWork(doc: JsValue): Option[Work]
 
-  //  def generateNextPagesWork(): Work
-
-
-  def saveFetchingLog(docJson: String, productType: String, provider: String): Seq[Completed] = {
+  def saveFetchingLog(result: BsonValue): Unit = {
     val bsonDoc: BsonDocument = BsonDocument(
       "query" -> BsonDocument(
         "url" -> BsonString(url),
-        "provider" -> BsonString(provider),
-        "productType" -> BsonString(productType),
         "pageStart" -> BsonInt64(pageStart),
         "pageEnd" -> BsonInt64(pageStart + source.pageSize),
         "startDate" -> BsonString(ingestionDates._1.toString(dateFormat)),
         "endDate" -> BsonString(ingestionDates._2.toString(dateFormat)),
       ),
-      "result" -> BsonDocument(docJson),
+      "result" -> result,
     )
     MongoDAO.insertDoc(bsonDoc, MongoDAO.PERIODIC_FETCHING_LOG_COL)
   }
+
 }

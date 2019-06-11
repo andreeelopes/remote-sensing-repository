@@ -111,7 +111,14 @@ object ParsingUtils {
           case "int" => result.toInt
           case "double" => result.toDouble
           case "boolean" => result.toBoolean
-          case "date" => DateTimeFormat.forPattern(extraction.dtfStr).parseDateTime(result)
+          case "date" => try {
+            DateTimeFormat.forPattern(extraction.dtfStr).parseDateTime(result)
+          } catch {
+            case _: Exception =>
+              println(extraction)
+              println(result)
+              null
+          }
           case "string" => result
         }
 

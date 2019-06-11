@@ -25,12 +25,10 @@ class WorkExecutor extends Actor with ActorLogging {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
 
-  def receive = {
-    case DoWork(work) =>
-      //      context.system.scheduler.scheduleOnce(work.source.workTimeout, self, new Exception(s"Work ${work.workId} timed out"))
-      work.execute
+  def receive: Receive = {
+    case DoWork(work) => work.execute
 
-    case e: Exception => throw new Exception(e)
+    case e: Exception => throw e
   }
 
 

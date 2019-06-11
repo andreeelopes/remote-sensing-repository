@@ -42,11 +42,16 @@ object MongoDAO {
   collections(PERIODIC_FETCHING_LOG_COL).drop().results()
 
 
-  def insertDoc(doc: Document, collectionName: String): Seq[Completed] = {
-    getOrCreateCollection(collectionName).insertOne(doc).results()
+  def insertDoc(doc: Document, collectionName: String): Unit = {
+    try {
+      getOrCreateCollection(collectionName).insertOne(doc).results()
+    }
+    catch {
+      case e: MongoException => println(e.getMessage)
+    }
   }
 
-  def addFieldToDoc(docId: String, field: String, value: BsonValue, collectionName: String): Seq[UpdateResult] = {
+  def addFieldToDoc(docId: String, field: String, value: BsonValue, collectionName: String): Unit = {
     getOrCreateCollection(collectionName).updateOne(equal("_id", docId), set(field, value)).results()
   }
 
