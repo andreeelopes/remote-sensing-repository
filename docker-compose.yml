@@ -1,0 +1,86 @@
+version: '3'
+services:
+  mongo:
+    image: mongo
+  #    container_name: mongo
+  #    restart: always
+  cassandra:
+    image: cassandra
+    #    container_name: cassandra
+    #    restart: always
+    ports:
+      - '9042:9042'
+    environment:
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+    volumes:
+      - ./cassandra_data:/var/lib/cassandra
+  master:
+    image: andrelopes/rs-repo:0.1-SNAPSHOT
+    #    container_name: master
+    command: ["bash", "/wait-for-it.sh", "cassandra:9042", "--", "java", "-jar", "/app.jar" , '2551']
+    #    restart: always
+    ports:
+      - '2551:2551'
+    depends_on:
+      - cassandra
+    environment:
+      CLUSTER_PORT: 2551
+      CLUSTER_IP: master
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+
+  master-standby:
+    image: andrelopes/rs-repo:0.1-SNAPSHOT
+    #    container_name: master-standby
+    command: ["bash", "/wait-for-it.sh", "cassandra:9042", "--", "java", "-jar", "/app.jar" , '2552']
+    #    restart: always
+    ports:
+      - '2552:2552'
+    depends_on:
+      - cassandra
+    environment:
+      CLUSTER_PORT: 2552
+      CLUSTER_IP: master-standby
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+
+
+  orchestrator:
+    image: andrelopes/rs-repo:0.1-SNAPSHOT
+    #    container_name: orchestrator
+    command: ["bash", "/wait-for-it.sh", "master:2551", "--",
+              "bash", "/wait-for-it.sh", "mongo:27017", "--",
+              "java", "-jar", "/app.jar" , '3001']
+    #    restart: always
+    ports:
+      - '3001:3001'
+    depends_on:
+      - master
+    environment:
+      CLUSTER_PORT: 3001
+      CLUSTER_IP: orchestrator
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+
+  worker:
+    image: andrelopes/rs-repo:0.1-SNAPSHOT
+    #    container_name: worker
+    command: ["bash", "/wait-for-it.sh", "master:2551", "--",
+              "bash", "/wait-for-it.sh", "mongo:27017", "--",
+              "java", "-jar", "/app.jar" , '5001', '2']
+    #    restart: always
+    depends_on:
+      - master
+    ports:
+      - '5001:5001'
+    environment:
+      CLUSTER_PORT: 5001
+      CLUSTER_IP: worker
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+

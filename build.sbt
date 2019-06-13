@@ -6,30 +6,27 @@ scalaVersion in ThisBuild := "2.12.7"
 
 lazy val global = project
   .in(file("."))
-  .settings(settings)
-  .aggregate(
-    indexer,
-    ingestion
-  )
-
-lazy val indexer = project
   .settings(
-    name := "indexer-app",
+    name := "ingestion",
     settings,
-    libraryDependencies ++= commonDependencies ++ Seq()
+    libraryDependencies ++= commonDependencies
   )
 
-lazy val ingestion = project
-  .settings(
-    name := "ingestion-app",
-    settings,
-    assemblySettings,
-    libraryDependencies ++= commonDependencies ++ Seq()
-  )
-//  .dependsOn(
-//    common
-//  )
+// SETTINGS
 
+lazy val settings = Seq(scalacOptions ++= compilerOptions)
+
+lazy val compilerOptions = Seq(
+  "-unchecked",
+  "-feature",
+  "-language:existentials",
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-language:postfixOps",
+  "-deprecation",
+  "-encoding",
+  "utf8"
+)
 
 // DEPENDENCIES
 
@@ -72,6 +69,8 @@ lazy val dependencies =
     val playWS = "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.4"
   }
 
+
+
 lazy val commonDependencies = Seq(
   dependencies.akkaCluster,
   dependencies.akkaClusterTools,
@@ -95,38 +94,50 @@ lazy val commonDependencies = Seq(
   dependencies.playWS
 )
 
-// SETTINGS
+//assembledMappings in assembly += {
+//  sbtassembly.MappingSet(None, Vector(
+//    (baseDirectory.value / "wait-for-it.sh") -> "wait-for-it.sh"
+//  ))
+//}
 
-lazy val settings = commonSettings
-
-
-lazy val commonSettings = Seq(
-  scalacOptions ++= compilerOptions,
-  resolvers ++= Seq(
-    "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
-    Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots")
-  )
-)
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs@_*) => MergeStrategy.discard
+  case PathList("reference.conf") => MergeStrategy.concat
+  case _ => MergeStrategy.first
+}
 
 
-lazy val compilerOptions = Seq(
-  "-unchecked",
-  "-feature",
-  "-language:existentials",
-  "-language:higherKinds",
-  "-language:implicitConversions",
-  "-language:postfixOps",
-  "-deprecation",
-  "-encoding",
-  "utf8"
-)
 
+//  #### DOCKER #####
 
-lazy val assemblySettings = Seq(
-  assemblyJarName in assembly := name.value + ".jar",
-  assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", xs@_*) => MergeStrategy.discard
-    case _ => MergeStrategy.first
+enablePlugins(JavaAppPackaging)
+
+// Remove all jar mappings in universal and append the fat jar
+mappings in Universal := {
+  val universalMappings = (mappings in Universal).value
+
+  val fatJar = (assembly in Compile).value
+  val shWait = new File("./wait-for-it.sh")
+
+  val filtered = universalMappings.filter {
+    case (file, name) => !name.endsWith(".jar")
   }
+
+  filtered :+ (fatJar -> ("lib/" + fatJar.getName)) :+ (shWait -> ("lib/" + shWait.getName))
+}
+
+
+dockerUsername := Some("andrelopes")
+
+import com.typesafe.sbt.packager.docker._
+
+dockerCommands := Seq(
+  Cmd("FROM", "openjdk:8"),
+  Cmd("WORKDIR", "/"),
+  Cmd("COPY", "opt/docker/lib/wait-for-it.sh", "/wait-for-it.sh"),
+  Cmd("RUN", "chmod", "+x", "/wait-for-it.sh"),
+  Cmd("COPY", "opt/docker/lib/*.jar", "/app.jar")
+  //  ExecCmd("ENTRYPOINT", "java", "-jar", "/app.jar")
 )
+
+
