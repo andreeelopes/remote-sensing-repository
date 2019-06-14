@@ -10,6 +10,7 @@ import org.mongodb.scala.bson.BsonDocument
 import play.api.libs.json.{JsObject, JsValue, Json}
 import utils.ParsingUtils.processExtractions
 import utils.Utils._
+import ErrorHandlers._
 
 object CopernicusOSearch {
   final val configName = "copernicus.copernicus-oah-opensearch"
@@ -57,7 +58,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
     (doc \ "feed" \ "entry").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
@@ -79,12 +80,12 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     processExtractions(node.toString.getBytes(StandardCharsets.UTF_8), auxExt, productId, url)
 
-    generateCreodiasWork(productId, title) :::
-      List(new CopernicusManifestWork(
-        new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
-        productId,
-        title)
-      )
+    generateCreodiasWork(productId, title) //:::
+    //      List(new CopernicusManifestWork(
+    //        new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
+    //        productId,
+    //        title)
+    //      )
 
   }
 
@@ -97,7 +98,8 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
       getAllExtractions(source.config, creodiasConfigName, source.program, source.platform, source.productType)
 
     if (creodiasExt.nonEmpty)
-      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt), creodiasUrl, productId))
+      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
+        creodiasUrl, productId))
     else
       List()
   }

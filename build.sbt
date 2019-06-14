@@ -94,12 +94,6 @@ lazy val commonDependencies = Seq(
   dependencies.playWS
 )
 
-//assembledMappings in assembly += {
-//  sbtassembly.MappingSet(None, Vector(
-//    (baseDirectory.value / "wait-for-it.sh") -> "wait-for-it.sh"
-//  ))
-//}
-
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs@_*) => MergeStrategy.discard
   case PathList("reference.conf") => MergeStrategy.concat
@@ -117,7 +111,7 @@ mappings in Universal := {
   val universalMappings = (mappings in Universal).value
 
   val fatJar = (assembly in Compile).value
-  val shWait = new File("./wait-for-it.sh")
+  val shWait = new File("./scripts/wait-for-it.sh")
 
   val filtered = universalMappings.filter {
     case (file, name) => !name.endsWith(".jar")

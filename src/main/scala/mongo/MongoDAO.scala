@@ -4,10 +4,12 @@ import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import mongo.Helpers._
-import org.mongodb.scala.bson.BsonValue
+import org.mongodb.scala.bson.{BsonDocument, BsonValue}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.mongodb.scala.model.Projections._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Future
 
 object MongoDAO {
 
@@ -27,19 +29,20 @@ object MongoDAO {
 
   val FETCHING_LOG_COL = "fetchingLog"
   val PERIODIC_FETCHING_LOG_COL = "periodicFetchingLog"
+  val EARTH_EXPLORER_TOKENS = "eeTokens"
 
   val database: MongoDatabase = mongoClient.getDatabase(DB_NAME)
+
+  database.drop().results() // TODO remove
 
   private var collections = Map(
     COMMON_COL -> database.getCollection(COMMON_COL),
     FETCHING_LOG_COL -> database.getCollection(FETCHING_LOG_COL),
-    PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL)
+    PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL),
+    EARTH_EXPLORER_TOKENS -> database.getCollection(EARTH_EXPLORER_TOKENS),
   )
 
-  collections(COMMON_COL).drop().results()
-  collections(FETCHING_LOG_COL).drop().results()
-  collections(PERIODIC_FETCHING_LOG_COL).drop().results()
-
+  insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_TOKENS)
 
   def insertDoc(doc: Document, collectionName: String): Unit = {
     try {
@@ -50,8 +53,22 @@ object MongoDAO {
     }
   }
 
+  def updateToken(docId: String, value: BsonValue, collectionName: String) : Unit = {
+    getOrCreateCollection(collectionName)
+      .updateMany(exists("token"), set("token", value))
+      .results()
+  }
+
   def addFieldToDoc(docId: String, field: String, value: BsonValue, collectionName: String): Unit = {
     getOrCreateCollection(collectionName).updateOne(equal("_id", docId), set(field, value)).results()
+  }
+
+  def getDocField(docId: String, field: String, collectionName: String): Future[Document] = {
+    getOrCreateCollection(collectionName)
+      .find(equal("_id", docId))
+      .projection(excludeId())
+      .first
+      .toFuture()
   }
 
   private def getOrCreateCollection(collectionName: String, drop: Boolean = true) = {
@@ -63,5 +80,6 @@ object MongoDAO {
     })
 
   }
+
 
 }

@@ -12,6 +12,14 @@ import org.mongodb.scala.bson.BsonDocument
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import utils.HTTPClient.singleRequest
 import utils.Utils.dateFormat
+import ErrorHandlers._
+import mongo.MongoDAO
+import org.bson.BsonString
+import org.mongodb.scala.Document
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 
 object EarthExplorer {
@@ -39,19 +47,26 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
                         override val pageStart: Int = 0)
   extends ProviderPeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
 
-  override val url =
-    s"""${source.baseUrl}search?jsonRequest={"apiKey":"47e9c35715174f0ab06d4d5a8399383f","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
+  val url = s"""${source.baseUrl}search?jsonRequest={"apiKey":<token>,"datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
+
+  private def getToken: String = {
+    val tokenFuture: Future[Document] = MongoDAO.getDocField("token", "token", MongoDAO.EARTH_EXPLORER_TOKENS)
+    Await.result(tokenFuture, 5000 millis).head._2.asString.getValue
+  }
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
+    val token = getToken
+
+    val url = s"""${source.baseUrl}search?jsonRequest={"apiKey":"$token","datasetName":"${source.productType}","temporalFilter":{"startDate":"${ingestionDates._1.toString(dateFormat)}","endDate":"${ingestionDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
     singleRequest(url, source.workTimeout, process, ErrorHandlers.earthExplorerErrorHandler, source.authConfigOpt)
   }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
-    val docJson = XML.toJSONObject(new String(responseBytes, StandardCharsets.UTF_8)).toString
+    val docJson = new String(responseBytes, StandardCharsets.UTF_8)
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-//    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
     (doc \ "data" \ "results").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
@@ -71,15 +86,18 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
   }
 
   private def generateEEMetadataWork(entityId: String) = {
-    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"47e9c35715174f0ab06d4d5a8399383f","datasetName":"${source.productType}","entityIds":"$entityId"}"""
+    val token = getToken
+
+    val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"$token","datasetName":"${source.productType}","entityIds":"$entityId"}"""
 
     val mdExt = source.extractions.filter(e => e.name == EarthExplorer.metadataExt || e.context == EarthExplorer.metadataExt)
 
     if (mdExt.nonEmpty)
       List(
-        new ExtractionWork(new ExtractionSource(source.config, source.configName, mdExt, ErrorHandlers.earthExplorerErrorHandler, None), mdUrl, entityId))
+        new ExtractionWork(new ExtractionSource(source.config, source.configName, mdExt, earthExplorerErrorHandler), mdUrl, entityId))
     else
       List()
+
   }
 
   def generatePeriodicWork(): EarthExplorerWork = {

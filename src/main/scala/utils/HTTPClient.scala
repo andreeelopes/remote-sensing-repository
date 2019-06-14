@@ -18,7 +18,7 @@ object HTTPClient {
   def singleRequest(url: String,
                     timeout: Duration,
                     process: Array[Byte] => List[Work],
-                    errorHandler: (Int, Array[Byte], String) => Unit,
+                    errorHandler: (Int, Array[Byte], String, ActorMaterializer) => Unit,
                     authConfigOpt: Option[AuthConfig] = None)
                    (implicit context: ActorContext, mat: ActorMaterializer): Unit = {
 
@@ -39,7 +39,7 @@ object HTTPClient {
       .map { response =>
         val body = response.body[Array[Byte]]
 
-        errorHandler(response.status, body, response.statusText)
+        errorHandler(response.status, body, response.statusText, mat)
 
         val workToBeDone = process(body)
 
@@ -48,7 +48,6 @@ object HTTPClient {
       .recover { case e: Exception => context.self ! e }
       .andThen { case _ => wsClient.close() }
   }
-
 
 
 }

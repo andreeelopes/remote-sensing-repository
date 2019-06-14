@@ -27,25 +27,30 @@ object ParsingUtils {
     val response = parseFile(responseBytes, extractions)
 
     extractions.foreach { e =>
-      e.queryType match {
-        case "file" if response.isRight =>
-          val destPath = e.destPath.replace("(productId)", productId)
-            .replace("(filename)", filename)
-            .replace("xml", "json")
-          processFile(Right(response.right.get), e.copy(destPath = destPath), url, productId)
-        case "multi-file" =>
-          val destPath = e.destPath.replace("(productId)", productId)
-          processMultiFile(response.right.get, e.copy(destPath = destPath), url, productId)
-        case "single-value" =>
-          processSingleValue(response.right.get, e, url, productId)
-        case "multi-value" =>
-          processMultiValue(response.right.get, e, url, productId)
-        case _ =>
-          val destPath = e.destPath
-            .replace("(productId)", productId)
-            .replace("(filename)", filename)
 
-          processFile(Left(response.left.get), e.copy(destPath = destPath), url, productId)
+      try {
+        e.queryType match {
+          case "file" if response.isRight =>
+            val destPath = e.destPath.replace("(productId)", productId)
+              .replace("(filename)", filename)
+              .replace("xml", "json")
+            processFile(Right(response.right.get), e.copy(destPath = destPath), url, productId)
+          case "multi-file" =>
+            val destPath = e.destPath.replace("(productId)", productId)
+            processMultiFile(response.right.get, e.copy(destPath = destPath), url, productId)
+          case "single-value" =>
+            processSingleValue(response.right.get, e, url, productId)
+          case "multi-value" =>
+            processMultiValue(response.right.get, e, url, productId)
+          case _ =>
+            val destPath = e.destPath
+              .replace("(productId)", productId)
+              .replace("(filename)", filename)
+
+            processFile(Left(response.left.get), e.copy(destPath = destPath), url, productId)
+        }
+      } catch {
+        case e: Exception => e.printStackTrace()
       }
     }
 
@@ -74,7 +79,7 @@ object ParsingUtils {
   }
 
 
-  private def processMultiFile(docStr: String, extraction: Extraction, url: String, productId: String) = {
+  private def processMultiFile(docStr: String, extraction: Extraction, url: String, productId: String): Unit = {
     val result = JsonPath.read[JSONArray](docStr, extraction.query).toJSONString
     val resultJson = Json.parse(result).as[List[JsValue]]
 
