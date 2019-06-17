@@ -56,11 +56,11 @@ abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRES
         "platform" -> source.platform,
         "productType" -> source.productType
       ),
-      MongoDAO.COMMON_COL)
+      MongoDAO.PRODUCTS_COL)
 
-    MongoDAO.insertDoc(Document("_id" -> productId), source.program)
-    MongoDAO.insertDoc(Document("_id" -> productId), source.platform)
-    MongoDAO.insertDoc(Document("_id" -> productId), source.productType)
+//    MongoDAO.insertDoc(Document("_id" -> productId), source.program)
+//    MongoDAO.insertDoc(Document("_id" -> productId), source.platform)
+//    MongoDAO.insertDoc(Document("_id" -> productId), source.productType)
   }
 
 

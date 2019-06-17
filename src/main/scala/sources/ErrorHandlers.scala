@@ -2,20 +2,18 @@ package sources
 
 import java.nio.charset.StandardCharsets
 
-import akka.stream.{ActorMaterializer, Materializer}
-import mongo.MongoDAO
-import play.api.libs.json.{JsArray, JsValue, Json}
-import play.api.libs.ws.ahc.{AhcCurlRequestLogger, StandaloneAhcWSClient}
-import play.api.libs.ws.DefaultBodyReadables._
-import play.api.libs.ws.DefaultBodyWritables._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration._
+import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import mongo.MongoDAO
 import org.mongodb.scala.bson.BsonString
+import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
+import scala.concurrent.duration._
+import play.api.libs.ws.DefaultBodyReadables._
 import scala.concurrent.Await
+import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ErrorHandlers {
 
@@ -59,7 +57,7 @@ object ErrorHandlers {
                 val body = response.body[String]
                 val token = (Json.parse(body) \ "data").as[String]
 
-                MongoDAO.updateToken("token", BsonString(token), MongoDAO.EARTH_EXPLORER_TOKENS)
+                MongoDAO.updateToken("token", BsonString(token))
               }
               .andThen { case _ => wsClient.close() }
 
@@ -98,5 +96,3 @@ object ErrorHandlers {
   }
 
 }
-
-

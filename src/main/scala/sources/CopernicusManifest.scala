@@ -4,11 +4,13 @@ import akka.actor.{ActorContext, ActorRef}
 import akka.stream.ActorMaterializer
 import com.jayway.jsonpath.JsonPath
 import com.typesafe.config.Config
+import mongo.MongoDAO
 import net.minidev.json.JSONArray
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import play.api.libs.json.{JsValue, Json}
 import utils.HTTPClient
 import utils.HTTPClient._
-import utils.ParsingUtils.processExtractions
+import utils.Parsing.processExtractions
 import utils.Utils._
 
 object CopernicusManifest {
@@ -51,6 +53,10 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
       .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
     val doc = processExtractions(responseBytes, manifestExtractions, productId, url).right.get
 
+    val dataObjects = (Json.parse(doc) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
+
+    processObjectsURL(dataObjects)
+
     // split container extractions into file extractions
     val containerExtractions = source.extractions.filter(e => e.queryType == "container")
     containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, doc))
@@ -65,29 +71,48 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
       extMap += (id -> set)
     }
 
-    extMap.foreach { case (k, v) => workToBeDone ::= processFileExtraction(Json.parse(doc), k, v, workToBeDone) }
+    extMap.foreach { case (k, v) => workToBeDone ::= processFileExtraction(dataObjects, k, v, workToBeDone) }
 
     workToBeDone
   }
 
-  private def processFileExtraction(doc: JsValue,
+  private def processObjectsURL(dataObjects: List[JsValue]): Unit = {
+
+    var rootDoc = BsonDocument()
+
+    dataObjects.foreach { obj =>
+      val manifestId = (obj \ "ID").as[String]
+      val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+
+      val fileUrl = transformURL(href)._1
+
+      rootDoc = rootDoc.append(manifestId, BsonDocument("status" -> BsonString("remote"), "url" -> BsonString(fileUrl)))
+    }
+
+    MongoDAO.addFieldToDoc(productId, "data", rootDoc, MongoDAO.PRODUCTS_COL)
+  }
+
+  private def processFileExtraction(dataObjects: List[JsValue],
                                     id: String,
                                     extractions: List[Extraction],
                                     workToBeDone: List[Work]) = {
 
-    val dataObjects = (doc \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
     val node = dataObjects.filter(node => (node \ "ID").as[String] == id).head
     val path = (node \ "byteStream" \ "fileLocation" \ "href").as[String]
 
+    val fileUrl = transformURL(path)
+
+    new ExtractionWork(
+      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, source.authConfigOpt),
+      fileUrl._1, productId, fileUrl._2)
+  }
+
+  def transformURL(path: String): (String, String) = {
     //  e.g.  path = ./GRANULE/L1C_T29SND_A009687_20190113T113432/IMG_DATA/T29SND_20190113T113429_B01.jp2
     val pathFragments = path.split("/").drop(1) // [GRANULE, L1C_T29SND_A009687_20190113T113432,...]
     val filePath = pathFragments.map(p => s"Nodes('$p')").mkString("/") + "/$value" // Nodes('GRANULE')/.../$value
 
-    val fileUrl = s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/" + filePath
-
-    new ExtractionWork(
-      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, source.authConfigOpt),
-      fileUrl, productId, pathFragments.last)
+    (s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/" + filePath, pathFragments.last)
   }
 
   private def processContainerExtraction(extraction: Extraction, doc: String) = {
@@ -96,7 +121,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
     Json.parse(result)
       .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, ""))
+      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, "", null, false))
 
   }
 

@@ -3,14 +3,13 @@ package sources
 import akka.actor.{ActorContext, ActorRef}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
-import utils.HTTPClient
 import utils.HTTPClient._
-import utils.ParsingUtils._
+import utils.Parsing._
 
 
 case class Extraction(name: String, queryType: String, resultType: String, resultTypeAftrTransf: String,
                       query: String, context: String, destPath: String,
-                      contextFormat: String, metamodelMapping: String, collection: String, dtfStr: String = null)
+                      contextFormat: String, metamodelMapping: String, collection: String, dtfStr: String, updateUrl: Boolean)
 
 
 class ExtractionSource(config: Config,
@@ -31,6 +30,7 @@ class ExtractionWork(override val source: ExtractionSource, url: String, product
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
     processExtractions(responseBytes, source.extractions, productId, url, filename)
+
     List()
   }
 

@@ -1,3 +1,11 @@
+import java.nio.charset.StandardCharsets
+
+import org.json.XML
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.io.geojson.GeoJsonWriter
+import org.locationtech.jts.io.gml2.GMLReader
+import play.api.libs.json.{JsObject, Json}
+
 //import com.mongodb.async.client.MongoCollection
 //import org.bson.BsonDocument
 //import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
@@ -21,6 +29,14 @@
 //////import org.mongodb.scala.model._
 ////
 //object Test extends App {
+//
+//  val lines = scala.io.Source.fromFile("a.txt").mkString
+//
+//
+//
+//  import java.io.PrintWriter
+//  new PrintWriter("b.txt") { write(XML.toJSONObject(lines).toString); close }
+//}
 //
 //
 //  val mongoClient: MongoClient = MongoClient()

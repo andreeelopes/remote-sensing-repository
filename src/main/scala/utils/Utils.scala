@@ -38,7 +38,7 @@ object Utils {
     val platformExt = Try(getExtractions(config, s"$configName.$platform", platform)).getOrElse(List())
     val productTypeSpecificExt = Try(getExtractions(config, s"$configName.$productType", productType)).getOrElse(List())
 
-    getExtractions(config, s"$configName", MongoDAO.COMMON_COL) ::: programExt ::: platformExt ::: productTypeSpecificExt
+    getExtractions(config, s"$configName", MongoDAO.PRODUCTS_COL) ::: programExt ::: platformExt ::: productTypeSpecificExt
   }
 
   def getExtractions(config: Config, configName: String, collection: String): List[Extraction] = {
@@ -55,7 +55,8 @@ object Utils {
         entry.getString("context-format"),
         entry.getString("metamodel-mapping"),
         collection,
-        Try(entry.getString("date-format")).getOrElse(null)
+        Try(entry.getString("date-format")).getOrElse(null),
+        Try(entry.getBoolean("update-url")).getOrElse(false),
       )
     }
   }
