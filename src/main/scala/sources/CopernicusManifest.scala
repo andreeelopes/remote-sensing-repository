@@ -48,30 +48,36 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     var workToBeDone = List[Work]()
     var extractions = List[Extraction]()
 
-    // process manifest extractions
-    val manifestExtractions = source.extractions
-      .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
-    val doc = processExtractions(responseBytes, manifestExtractions, productId, url).right.get
+    try {
 
-    val dataObjects = (Json.parse(doc) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
+      // process manifest extractions
+      val manifestExtractions = source.extractions
+        .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
+      val doc = processExtractions(responseBytes, manifestExtractions, productId, url).right.get
 
-    processObjectsURL(dataObjects)
+      val dataObjects = (Json.parse(doc) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
 
-    // split container extractions into file extractions
-    val containerExtractions = source.extractions.filter(e => e.queryType == "container")
-    containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, doc))
-    extractions :::= source.extractions.diff(containerExtractions).diff(manifestExtractions)
+      processObjectsURL(dataObjects)
 
-    // aggregate queries
-    var extMap = Map[String, List[Extraction]]()
-    extractions.foreach { e =>
-      val id = if (e.context == "") e.name else e.context
-      val set = e :: extMap.getOrElse(id, List())
+      // split container extractions into file extractions
+      val containerExtractions = source.extractions.filter(e => e.queryType == "container")
+      containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, doc))
+      extractions :::= source.extractions.diff(containerExtractions).diff(manifestExtractions)
 
-      extMap += (id -> set)
+      // aggregate queries
+      var extMap = Map[String, List[Extraction]]()
+      extractions.foreach { e =>
+        val id = if (e.context == "") e.name else e.context
+        val set = e :: extMap.getOrElse(id, List())
+
+        extMap += (id -> set)
+      }
+
+      extMap.foreach { case (k, v) => workToBeDone ::= processFileExtraction(dataObjects, k, v, workToBeDone) }
+
+    } catch {
+      case e: Exception => e.printStackTrace() //resource doesnt exist
     }
-
-    extMap.foreach { case (k, v) => workToBeDone ::= processFileExtraction(dataObjects, k, v, workToBeDone) }
 
     workToBeDone
   }
@@ -103,7 +109,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     val fileUrl = transformURL(path)
 
     new ExtractionWork(
-      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, source.authConfigOpt),
+      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, None, source.authConfigOpt),
       fileUrl._1, productId, fileUrl._2)
   }
 

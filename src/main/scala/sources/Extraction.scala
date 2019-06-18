@@ -16,6 +16,7 @@ class ExtractionSource(config: Config,
                        configName: String,
                        val extractions: List[Extraction],
                        val errorHandler: (Int, Array[Byte], String, ActorMaterializer) => Unit = ErrorHandlers.defaultErrorHandler,
+                       val processOpt: Option[Array[Byte] => List[Work]] = None,
                        val authConfig: Option[AuthConfig] = None)
   extends Source(configName, config) {
   override val authConfigOpt: Option[AuthConfig] = authConfig
@@ -25,7 +26,10 @@ class ExtractionWork(override val source: ExtractionSource, url: String, product
   extends Work(source) {
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-    singleRequest(url, source.workTimeout, process, source.errorHandler, source.authConfigOpt)
+    source.processOpt match {
+      case Some(processFunc) => singleRequest(url, source.workTimeout, processFunc, source.errorHandler, source.authConfigOpt)
+      case None => singleRequest(url, source.workTimeout, process, source.errorHandler, source.authConfigOpt)
+    }
   }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
