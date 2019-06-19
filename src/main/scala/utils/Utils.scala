@@ -1,6 +1,7 @@
 package utils
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, PrintWriter}
+import java.util
 import java.util.UUID
 
 import com.typesafe.config.Config
@@ -62,8 +63,21 @@ object Utils {
   }
 
 
-  def productsToFetch(config: Config, configName: String): List[ProductEntry] = {
+  def getIndexesConf(config: Config, configName: String): util.List[Index] = {
+    config.getConfigList(configName).asScala.toList.map {
+      entry =>
+        Index(
+          entry.getString("type"),
+          entry.getString("order"),
+          entry.getStringList("fields-names").asScala.toList
+        )
+    }.asJava
+  }
 
+
+  case class Index(indexType: String, order:String, fields: List[String])
+
+  def productsToFetch(config: Config, configName: String): List[ProductEntry] = {
     config.getConfigList(s"sources.$configName.products").asScala.toList.map { entry =>
       ProductEntry(
         entry.getString("program"),
@@ -74,6 +88,6 @@ object Utils {
   }
 
 
-}
+  case class ProductEntry(program: String, platform: String, productType: List[String])
 
-case class ProductEntry(program: String, platform: String, productType: List[String])
+}

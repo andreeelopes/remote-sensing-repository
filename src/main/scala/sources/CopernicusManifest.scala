@@ -1,21 +1,27 @@
 package sources
 
+import java.nio.charset.StandardCharsets
+
 import akka.actor.{ActorContext, ActorRef}
 import akka.stream.ActorMaterializer
 import com.jayway.jsonpath.JsonPath
 import com.typesafe.config.Config
 import mongo.MongoDAO
 import net.minidev.json.JSONArray
+import org.json.XML
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import play.api.libs.json.{JsValue, Json}
-import utils.HTTPClient
+import utils.{HTTPClient, ResourceDoesNotExistException}
 import utils.HTTPClient._
 import utils.Parsing.processExtractions
 import utils.Utils._
 
+import scala.util.{Failure, Success, Try}
+
 object CopernicusManifest {
   final val configName = "copernicus.copernicus-oah-odata"
   final val manifestExt = "manifest"
+  final val sourceAPI = "copernicus-oah-odata"
 }
 
 class CopernicusManifestSource(val config: Config, program: String, platform: String, productType: String)
@@ -49,19 +55,24 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     var extractions = List[Extraction]()
 
     try {
+      val docStr = XML.toJSONObject(new String(responseBytes, StandardCharsets.UTF_8)).toString
+      val dataObjects = Try {
+        (Json.parse(docStr) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
+      } match {
+        case Failure(_) => throw ResourceDoesNotExistException()
+        case Success(value) => value
+      }
 
       // process manifest extractions
       val manifestExtractions = source.extractions
         .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
-      val doc = processExtractions(responseBytes, manifestExtractions, productId, url).right.get
-
-      val dataObjects = (Json.parse(doc) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
+      processExtractions(responseBytes, manifestExtractions, productId, url).right.get
 
       processObjectsURL(dataObjects)
 
       // split container extractions into file extractions
       val containerExtractions = source.extractions.filter(e => e.queryType == "container")
-      containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, doc))
+      containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, docStr))
       extractions :::= source.extractions.diff(containerExtractions).diff(manifestExtractions)
 
       // aggregate queries
@@ -76,7 +87,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
       extMap.foreach { case (k, v) => workToBeDone ::= processFileExtraction(dataObjects, k, v, workToBeDone) }
 
     } catch {
-      case e: Exception => e.printStackTrace() //resource doesnt exist
+      case e: Exception => e.printStackTrace()
     }
 
     workToBeDone
@@ -109,7 +120,8 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     val fileUrl = transformURL(path)
 
     new ExtractionWork(
-      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, None, source.authConfigOpt),
+      new ExtractionSource(source.config, source.configName, CopernicusManifest.sourceAPI,
+        extractions, ErrorHandlers.defaultErrorHandler, None, source.authConfigOpt),
       fileUrl._1, productId, fileUrl._2)
   }
 

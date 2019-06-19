@@ -1,7 +1,8 @@
 package sources
 
 import mongo.MongoDAO
-import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory
+import org.locationtech.jts.geom.{Coordinate, CoordinateFilter, CoordinateSequenceFactory, GeometryFactory}
 import org.locationtech.jts.io.WKTReader
 import org.locationtech.jts.io.geojson.GeoJsonWriter
 import org.locationtech.jts.io.gml2.GMLReader
@@ -30,8 +31,19 @@ object Transformations {
   }
 
 
+  class InvertCoordinateFilter extends CoordinateFilter {
+    override def filter(coord: Coordinate): Unit = {
+      val oldX = coord.x
+      coord.x = coord.y
+      coord.y = oldX
+    }
+  }
+
   def gmlToGeoJson(value: String): String = {
-    val geometry = new GMLReader().read(value, new GeometryFactory())
+    var geometry = new GMLReader().read(value, new GeometryFactory())
+
+    geometry.apply(new InvertCoordinateFilter())
+
     val geojson = new GeoJsonWriter().write(geometry)
 
     (Json.parse(geojson).as[JsObject] - "crs").toString

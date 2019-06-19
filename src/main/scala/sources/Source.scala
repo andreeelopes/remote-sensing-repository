@@ -17,6 +17,9 @@ abstract class Source(configName: String, config: Config) extends Serializable {
       config.getDuration(s"distributed-workers.work-timeout").getSeconds.seconds
     }
 
+  val baseDir: String = config.getString("clustering.base-dir")
+
+
 
   val authConfigOpt: Option[AuthConfig]
 }

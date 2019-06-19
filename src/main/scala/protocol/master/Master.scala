@@ -4,6 +4,7 @@ import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import protocol.master.MasterWorkerProtocol._
 import sources.Work
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
@@ -31,7 +32,7 @@ object Master {
 
 }
 
-class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor with ActorLogging {
+class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorLogging {
 
   import Master._
   import WorkState._
@@ -43,9 +44,8 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
   // the set of available workers is not event sourced as it depends on the current set of workers
   private var workers = Map[String, WorkerState]()
 
-  timers.startPeriodicTimer("cleanup", CleanupTick, cleanupTimeout)
+  context.system.scheduler.schedule(0.seconds, cleanupTimeout, self, CleanupTick)
 
-  //  val mediator: ActorRef = DistributedPubSub(context.system).mediator
   // workState is event sourced to be able to make sure work is processed even in case of crash
   private var workState = WorkState.empty
 
@@ -219,7 +219,7 @@ class Master(cleanupTimeout: FiniteDuration) extends Timers with PersistentActor
 
   def newStaleWorkerDeadline(): Deadline = considerWorkerDeadAfter.fromNow
 
-  def tooLongSinceHeardFrom(lastHeardFrom: Long):Boolean =
+  def tooLongSinceHeardFrom(lastHeardFrom: Long): Boolean =
     System.currentTimeMillis() - lastHeardFrom > considerWorkerDeadAfter.toMillis
 
 }

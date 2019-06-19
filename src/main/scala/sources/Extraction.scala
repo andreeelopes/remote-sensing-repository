@@ -14,6 +14,7 @@ case class Extraction(name: String, queryType: String, resultType: String, resul
 
 class ExtractionSource(config: Config,
                        configName: String,
+                       sourceApi: String,
                        val extractions: List[Extraction],
                        val errorHandler: (Int, Array[Byte], String, ActorMaterializer) => Unit = ErrorHandlers.defaultErrorHandler,
                        val processOpt: Option[Array[Byte] => List[Work]] = None,

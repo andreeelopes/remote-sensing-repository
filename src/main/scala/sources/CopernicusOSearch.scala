@@ -15,10 +15,12 @@ import ErrorHandlers._
 object CopernicusOSearch {
   final val configName = "copernicus.copernicus-oah-opensearch"
   final val PROVIDER: String = "copernicus"
+  final val sourceAPI = "copernicus-oah-opensearch"
 }
 
 object CreoDias {
   final val creodiasConfigName = "creodias.creodias-odata"
+  final val sourceAPI = "creodias-odata"
 }
 
 class CopernicusOSearchSource(val config: Config,
@@ -58,9 +60,9 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-//    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "feed" \ "entry").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+    (doc \ "feed" \ "entry").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
     saveFetchingLog(BsonDocument(docJson))
 
@@ -72,7 +74,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     val productId = (node \ "id").as[String]
     val title = (node \ "title").as[String]
-    new File(s"data/$productId").mkdirs() // TODO data harcoded
+    new File(s"${source.baseDir}/$productId").mkdirs() // TODO data harcoded
 
     setupEntryMongo(productId)
 
@@ -80,12 +82,12 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     processExtractions(node.toString.getBytes(StandardCharsets.UTF_8), auxExt, productId, url)
 
-//    generateCreodiasWork(productId, title) ::: TODO
-      List(new CopernicusManifestWork(
-        new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
-        productId,
-        title)
-      )
+    //    generateCreodiasWork(productId, title) ::: TODO
+    List(new CopernicusManifestWork(
+      new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
+      productId,
+      title)
+    )
 
   }
 
@@ -98,7 +100,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
       getAllExtractions(source.config, creodiasConfigName, source.program, source.platform, source.productType)
 
     if (creodiasExt.nonEmpty)
-      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
+      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, CreoDias.sourceAPI, creodiasExt, creodiasErrorHandler),
         creodiasUrl, productId))
     else
       List()

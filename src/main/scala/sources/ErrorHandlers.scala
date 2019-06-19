@@ -11,6 +11,8 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
 import scala.concurrent.duration._
 import play.api.libs.ws.DefaultBodyReadables._
+import utils.{AuthException, InternalServerError, OfflineServiceException, RateLimitException, ResourceDoesNotExistException}
+
 import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,8 +27,11 @@ object ErrorHandlers {
       if (responseStr.contains("Unexpected nav segment Navigation Property")) // resource does not exist, dont try again
         println("Resource doesnt exist, dont retry") // TODO log error
     }
-    else if (status == 403 /*rate limit*/ || status == 500)
-      throw new Exception(statusText + "->\n" + new String(body))
+    else if (status == 403)
+      throw RateLimitException(new String(body))
+    else if (status == 500)
+      throw InternalServerError(new String(body))
+
   }
 
   def earthExplorerErrorHandler(status: Int, body: Array[Byte], statusText: String, materializer: ActorMaterializer): Unit = {
@@ -37,6 +42,8 @@ object ErrorHandlers {
         case Success(responseStr) =>
           if (responseStr.contains("RATE_LIMIT"))
             throw new Exception(new String(body))
+          else if (responseStr.contains("OFFLINE"))
+            throw OfflineServiceException(new String(body))
           else if (responseStr.contains("AUTH_UNAUTHORIZED")) {
 
             implicit val mat: ActorMaterializer = materializer
@@ -62,19 +69,19 @@ object ErrorHandlers {
               .andThen { case _ => wsClient.close() }
 
             Await.result(req, 10000 millis)
-            throw new Exception("AUTH_UNAUTHORIZED")
+            throw AuthException("Token must be renewed")
           }
       }
 
     }
     else if (status == 500)
-      throw new Exception(statusText + "->\n" + new String(body))
+      throw InternalServerError(new String(body))
   }
 
 
   def defaultErrorHandler(status: Int, body: Array[Byte], statusText: String, materializer: ActorMaterializer): Unit = {
     if (status == 500)
-      throw new Exception(statusText + "->\n" + new String(body))
+      throw InternalServerError(new String(body))
   }
 
   def creodiasErrorHandler(status: Int, body: Array[Byte], statusText: String, materializer: ActorMaterializer): Unit = {
@@ -86,13 +93,13 @@ object ErrorHandlers {
         case Success(responseStr) =>
           val json = Json.parse(responseStr)
           if ((json \ "features").as[List[JsValue]].isEmpty)
-            throw new Exception("Product does not exist in CREODIAS")
+            throw ResourceDoesNotExistException("Product does not exist in CREODIAS")
 
       }
     }
 
     if (status == 500)
-      throw new Exception(statusText + "->\n" + new String(body))
+      throw InternalServerError(new String(body))
   }
 
 }

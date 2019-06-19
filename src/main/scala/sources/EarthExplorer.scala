@@ -26,6 +26,7 @@ object EarthExplorer {
   final val configName = "earth-explorer"
   final val PROVIDER = "earth-explorer"
   final val metadataExt = "metadata"
+  final val sourceAPI = "earth-explorer"
 }
 
 class EarthExplorerSource(val config: Config,
@@ -66,9 +67,9 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "data" \ "results").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+    (doc \ "data" \ "results").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
     saveFetchingLog(BsonDocument(docJson))
 
@@ -79,7 +80,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
 
     val entityId = (node \ "entityId").as[String]
     val title = (node \ "displayId").as[String]
-    new File(s"data/$entityId").mkdirs() //TODO data harcoded, insert sentinel/sentinel1/product
+    new File(s"${source.baseDir}/$entityId").mkdirs()
 
     setupEntryMongo(entityId)
 
@@ -122,12 +123,8 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
             "bandQA" -> BsonDocument("status" -> BsonString("remote"), "url" -> BsonString(s"$amazonProductUrl/${title}_BQA.TIF")),
           )
 
-          println(mongoDoc)
-
           MongoDAO.addFieldToDoc(entityId, "data", mongoDoc, MongoDAO.PRODUCTS_COL)
         }
-
-
       }
 
 
@@ -137,7 +134,8 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
 
     if (mdExt.nonEmpty)
       List(
-        new ExtractionWork(new ExtractionSource(source.config, source.configName, mdExt, earthExplorerErrorHandler, Some(processEEMetadata)),
+        new ExtractionWork(new ExtractionSource(source.config, source.configName, EarthExplorer.sourceAPI,
+          mdExt, earthExplorerErrorHandler, Some(processEEMetadata)),
           mdUrl, entityId)
       )
     else

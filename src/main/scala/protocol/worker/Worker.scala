@@ -20,7 +20,7 @@ object Worker {
 }
 
 class Worker(masterProxy: ActorRef)
-  extends Actor with Timers with ActorLogging {
+  extends Actor with ActorLogging {
 
   import context.dispatcher
 

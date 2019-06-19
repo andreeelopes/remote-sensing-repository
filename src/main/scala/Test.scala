@@ -4,7 +4,7 @@ import org.json.XML
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.geojson.GeoJsonWriter
 import org.locationtech.jts.io.gml2.GMLReader
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 //import com.mongodb.async.client.MongoCollection
 //import org.bson.BsonDocument
@@ -33,12 +33,18 @@ import play.api.libs.json.{JsObject, Json}
 //  val lines = scala.io.Source.fromFile("a.txt").mkString
 //
 //
+//  val docStr = XML.toJSONObject(lines).toString
+//  val a = (Json.parse(docStr) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
+//
+//  println(a)
 //
 //  import java.io.PrintWriter
-//  new PrintWriter("b.txt") { write(XML.toJSONObject(lines).toString); close }
+//  new PrintWriter("b.json") { write(XML.toJSONObject(lines).toString); close }
+//
+//
 //}
-//
-//
+
+
 //  val mongoClient: MongoClient = MongoClient()
 //  Thread.sleep(1000)
 //  val database: MongoDatabase = mongoClient.getDatabase("test")

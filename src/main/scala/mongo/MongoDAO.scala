@@ -1,5 +1,6 @@
 package mongo
 
+import com.mongodb.client.model.{Filters, IndexOptions, Indexes}
 import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
@@ -8,6 +9,7 @@ import org.mongodb.scala.bson.{BsonDocument, BsonString, BsonValue}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.mongodb.scala.model.Projections._
 import sources.Extraction
+import utils.Utils
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -36,7 +38,7 @@ object MongoDAO {
 
   database.drop().results() // TODO remove
 
-  private var collections = Map(
+  private val collections = Map(
     PRODUCTS_COL -> database.getCollection(PRODUCTS_COL),
     FETCHING_LOG_COL -> database.getCollection(FETCHING_LOG_COL),
     PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL),
@@ -45,9 +47,12 @@ object MongoDAO {
 
   insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_TOKENS)
 
+  createIndexes()
+
+
   def insertDoc(doc: Document, collectionName: String): Unit = {
     try {
-      getOrCreateCollection(collectionName).insertOne(doc).results()
+      collections(collectionName).insertOne(doc).results()
     }
     catch {
       case e: MongoException => println(e.getMessage)
@@ -56,7 +61,7 @@ object MongoDAO {
 
   def updateUrl(extraction: Extraction, productId: String): Unit = {
 
-    getOrCreateCollection(PRODUCTS_COL)
+    collections(PRODUCTS_COL)
       .updateOne(
         equal("_id", productId),
         set(s"data.${extraction.name}",
@@ -66,30 +71,56 @@ object MongoDAO {
   }
 
   def updateToken(docId: String, value: BsonValue): Unit = {
-    getOrCreateCollection(EARTH_EXPLORER_TOKENS)
+    collections(EARTH_EXPLORER_TOKENS)
       .updateMany(exists("token"), set("token", value))
       .results()
   }
 
   def addFieldToDoc(docId: String, field: String, value: BsonValue, collectionName: String): Unit = {
-    getOrCreateCollection(collectionName).updateOne(equal("_id", docId), set(field, value)).results()
+    collections(collectionName).updateOne(equal("_id", docId), set(field, value)).results()
   }
 
   def getDocField(docId: String, field: String, collectionName: String): Future[Document] = {
-    getOrCreateCollection(collectionName)
+    collections(collectionName)
       .find(equal("_id", docId))
       .projection(excludeId())
       .first
       .toFuture()
   }
 
-  private def getOrCreateCollection(collectionName: String, drop: Boolean = true) = {
-    collections.getOrElse(collectionName, {
-      val col = database.getCollection(collectionName)
-      if (drop) col.drop.results()
-      collections += (collectionName -> col)
-      col
-    })
+  //  private def getOrCreateCollection(collectionName: String, drop: Boolean = true) = {
+  //    collections.getOrElse(collectionName, {
+  //      val col = database.getCollection(collectionName)
+  //      if (drop) col.drop.results()
+  //      collections += (collectionName -> col)
+  //      col
+  //    })
+  //
+  //  }
+
+  def createIndexes(): Unit = {
+
+    val indexes = Utils.getIndexesConf(config, "indexing.indexes")
+
+    indexes.asScala.foreach { index =>
+      index.indexType match {
+        case "full" =>
+          index.order match {
+            case "ascending" => collections(PRODUCTS_COL).createIndex(Indexes.ascending(index.fields.head)).results()
+            case "descending" => collections(PRODUCTS_COL).createIndex(Indexes.descending(index.fields.head)).results()
+          }
+        case "partial" =>
+          val partialFilterIndexOptions = new IndexOptions().partialFilterExpression(Filters.exists(index.fields.head))
+          index.order match {
+            case "ascending" =>
+              collections(PRODUCTS_COL).createIndex(Indexes.ascending(index.fields.head), partialFilterIndexOptions).results()
+            case "descending" =>
+              collections(PRODUCTS_COL).createIndex(Indexes.descending(index.fields.head), partialFilterIndexOptions).results()
+          }
+
+        case "geospatial" => collections(PRODUCTS_COL).createIndex(Indexes.geo2dsphere(index.fields.head)).results()
+      }
+    }
 
   }
 

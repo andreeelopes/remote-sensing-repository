@@ -20,9 +20,9 @@ object Main {
   val orchestratorPortRange = 3000 to 3999
 
   def main(args: Array[String]): Unit = {
+    val baseDir = ConfigFactory.load().getString("clustering.base-dir")
 
-    new File("data").mkdirs //TODO
-    new File("data").mkdirs //TODO
+    new File(baseDir).mkdirs
 
     args.headOption match {
 
@@ -52,7 +52,7 @@ object Main {
     startOrchestrator(3001)
     // worker nodes
     startWorker(5001, 1, 1)
-//    startWorker(5002, 1, 2)
+    //    startWorker(5002, 1, 2)
     //    startWorker(5003, 1, 3)
     //    startWorker(5004, 1, 4)
     //    startWorker(5005, 1, 8)
