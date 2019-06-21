@@ -18,22 +18,17 @@ import utils.Utils._
 
 import scala.util.{Failure, Success, Try}
 
-object CopernicusManifest {
-  final val configName = "copernicus.copernicus-oah-odata"
-  final val manifestExt = "manifest"
-  final val sourceAPI = "copernicus-oah-odata"
-}
 
-class CopernicusManifestSource(val config: Config, program: String, platform: String, productType: String)
-  extends sources.Source(CopernicusManifest.configName, config) with AuthComponent {
+class CopernicusManifestSource(config: Config, program: String, platform: String, productType: String)
+  extends sources.Source("copernicus-oah-odata", config) with AuthComponent {
 
-  final val configName = CopernicusManifest.configName
+  override val configName = "copernicus-oah-odata"
 
   override val authConfigOpt = Some(AuthConfig(configName, config))
 
   val baseUrl: String = config.getString(s"sources.$configName.base-url")
 
-  val extractions: List[Extraction] = getAllExtractions(config, configName, program, platform.toLowerCase, productType)
+  val extractions: List[Extraction] = getAllExtractions(configName, program, platform.toLowerCase, productType)
 
   //  mapping of manifest names
   val manifestName: String = if (platform == "sentinel3") "xfdumanifest.xml" else "manifest.safe"
@@ -47,7 +42,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
   val url = s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/Nodes('${source.manifestName}')/$$value"
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-    singleRequest(url, source.workTimeout, process, ErrorHandlers.copernicusODataErrorHandler, source.authConfigOpt)
+    singleRequest(url, workTimeout, process, ErrorHandlers.copernicusODataErrorHandler, source.authConfigOpt)
   }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
@@ -65,7 +60,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
       // process manifest extractions
       val manifestExtractions = source.extractions
-        .filter(e => e.name == CopernicusManifest.manifestExt || e.context == CopernicusManifest.manifestExt)
+        .filter(e => e.name == "manifest" || e.context == "manifest")
       processExtractions(responseBytes, manifestExtractions, productId, url).right.get
 
       processObjectsURL(dataObjects)
@@ -120,8 +115,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     val fileUrl = transformURL(path)
 
     new ExtractionWork(
-      new ExtractionSource(source.config, source.configName, CopernicusManifest.sourceAPI,
-        extractions, ErrorHandlers.defaultErrorHandler, None, source.authConfigOpt),
+      new ExtractionSource(source.config, source.configName, extractions, ErrorHandlers.defaultErrorHandler, None, source.authConfigOpt),
       fileUrl._1, productId, fileUrl._2)
   }
 

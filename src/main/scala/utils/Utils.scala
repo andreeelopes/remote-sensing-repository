@@ -4,7 +4,7 @@ import java.io.{BufferedOutputStream, File, FileOutputStream, PrintWriter}
 import java.util
 import java.util.UUID
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import mongo.MongoDAO
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import sources.Extraction
@@ -20,6 +20,8 @@ object Utils {
 
   val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
+  val config: Config = ConfigFactory.load()
+
   def generateUUID(): String = UUID.randomUUID().toString
 
   def writeFile(filename: String, data: Array[Byte]): Unit = {
@@ -34,15 +36,15 @@ object Utils {
     pw.close()
   }
 
-  def getAllExtractions(config: Config, configName: String, program: String = "-1", platform: String = "-1", productType: String = "-1"): List[Extraction] = {
-    val programExt = Try(getExtractions(config, s"$configName.$program", program)).getOrElse(List())
-    val platformExt = Try(getExtractions(config, s"$configName.$platform", platform)).getOrElse(List())
-    val productTypeSpecificExt = Try(getExtractions(config, s"$configName.$productType", productType)).getOrElse(List())
+  def getAllExtractions(configName: String, program: String = "-1", platform: String = "-1", productType: String = "-1"): List[Extraction] = {
+    val programExt = Try(getExtractions(s"$configName.$program", program)).getOrElse(List())
+    val platformExt = Try(getExtractions(s"$configName.$platform", platform)).getOrElse(List())
+    val productTypeSpecificExt = Try(getExtractions(s"$configName.$productType", productType)).getOrElse(List())
 
-    getExtractions(config, s"$configName", MongoDAO.PRODUCTS_COL) ::: programExt ::: platformExt ::: productTypeSpecificExt
+    getExtractions(s"$configName", MongoDAO.PRODUCTS_COL) ::: programExt ::: platformExt ::: productTypeSpecificExt
   }
 
-  def getExtractions(config: Config, configName: String, collection: String): List[Extraction] = {
+  def getExtractions(configName: String, collection: String): List[Extraction] = {
 
     config.getConfigList(s"sources.$configName.extractions").asScala.toList.map { entry =>
       Extraction(
@@ -63,7 +65,7 @@ object Utils {
   }
 
 
-  def getIndexesConf(config: Config, configName: String): util.List[Index] = {
+  def getIndexesConf(configName: String): util.List[Index] = {
     config.getConfigList(configName).asScala.toList.map {
       entry =>
         Index(
@@ -75,9 +77,9 @@ object Utils {
   }
 
 
-  case class Index(indexType: String, order:String, fields: List[String])
+  case class Index(indexType: String, order: String, fields: List[String])
 
-  def productsToFetch(config: Config, configName: String): List[ProductEntry] = {
+  def productsToFetch(configName: String): List[ProductEntry] = {
     config.getConfigList(s"sources.$configName.products").asScala.toList.map { entry =>
       ProductEntry(
         entry.getString("program"),
@@ -89,5 +91,20 @@ object Utils {
 
 
   case class ProductEntry(program: String, platform: String, productType: List[String])
+
+
+  def sourceConcurrencyLimits(): Map[String, Int] = {
+    val sourcesConfig = config.getObject("sources")
+    var concurrencyLimits: Map[String, Int] = Map()
+
+    sourcesConfig.asScala.foreach { case (k, _) =>
+      val sourceConfig = config.getConfig(s"sources.$k")
+      val limit = Try(sourceConfig.getInt("concurrency-limit")).getOrElse(Int.MaxValue)
+
+      concurrencyLimits += (k -> limit)
+    }
+
+    concurrencyLimits
+  }
 
 }

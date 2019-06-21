@@ -41,7 +41,7 @@ object ErrorHandlers {
         case Failure(_) =>
         case Success(responseStr) =>
           if (responseStr.contains("RATE_LIMIT"))
-            throw new Exception(new String(body))
+            throw RateLimitException(new String(body))
           else if (responseStr.contains("OFFLINE"))
             throw OfflineServiceException(new String(body))
           else if (responseStr.contains("AUTH_UNAUTHORIZED")) {

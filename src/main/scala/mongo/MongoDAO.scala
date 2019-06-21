@@ -100,7 +100,7 @@ object MongoDAO {
 
   def createIndexes(): Unit = {
 
-    val indexes = Utils.getIndexesConf(config, "indexing.indexes")
+    val indexes = Utils.getIndexesConf("indexing.indexes")
 
     indexes.asScala.foreach { index =>
       index.indexType match {

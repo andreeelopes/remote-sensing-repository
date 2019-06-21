@@ -22,24 +22,20 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 
-object EarthExplorer {
-  final val configName = "earth-explorer"
-  final val PROVIDER = "earth-explorer"
-  final val metadataExt = "metadata"
-  final val sourceAPI = "earth-explorer"
-}
-
-class EarthExplorerSource(val config: Config,
+class EarthExplorerSource(config: Config,
                           override val program: String,
                           override val platform: String,
                           override val productType: String)
-  extends ProviderPeriodicRESTSource(EarthExplorer.configName, config, program, platform, productType) {
-  final val configName = EarthExplorer.configName
-
+  extends ProviderPeriodicRESTSource("earth-explorer", config, program, platform, productType) {
   val authConfigOpt: None.type = None
+
   val epochInitialWork = new EarthExplorerWork(this, ingestionHistoryDates, isEpoch = true)
   val periodicInitialWork = new EarthExplorerWork(this, initialIngestion)
-  override val PROVIDER: String = EarthExplorer.PROVIDER
+
+  override final val PROVIDER: String = "earth-explorer"
+  override val configName = "earth-explorer"
+  final val metadataExt = "metadata"
+
 }
 
 class EarthExplorerWork(override val source: EarthExplorerSource,
@@ -59,7 +55,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
     val token = getToken
 
     val tokenUrl = url.replace("<token>", token)
-    singleRequest(tokenUrl, source.workTimeout, process, ErrorHandlers.earthExplorerErrorHandler, source.authConfigOpt)
+    singleRequest(tokenUrl, workTimeout, process, ErrorHandlers.earthExplorerErrorHandler, source.authConfigOpt)
   }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
@@ -92,7 +88,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
 
     val mdUrl = s"""${source.baseUrl}metadata?jsonRequest={"apiKey":"$token","datasetName":"${source.productType}","entityIds":"$entityId"}"""
 
-    val mdExt = source.extractions.filter(e => e.name == EarthExplorer.metadataExt || e.context == EarthExplorer.metadataExt)
+    val mdExt = source.extractions.filter(e => e.name == source.metadataExt || e.context == source.metadataExt)
 
     val processEEMetadata = (responseBytes: Array[Byte]) => {
       val docStr = processExtractions(responseBytes, mdExt, entityId, mdUrl).right.get
@@ -134,8 +130,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
 
     if (mdExt.nonEmpty)
       List(
-        new ExtractionWork(new ExtractionSource(source.config, source.configName, EarthExplorer.sourceAPI,
-          mdExt, earthExplorerErrorHandler, Some(processEEMetadata)),
+        new ExtractionWork(new ExtractionSource(source.config, source.configName, mdExt, earthExplorerErrorHandler, Some(processEEMetadata)),
           mdUrl, entityId)
       )
     else

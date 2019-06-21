@@ -1,4 +1,11 @@
-version: '3'
+#  docker-compose --compatibility up
+
+# docker swarm init
+# docker stack deploy --compose-file docker-compose.yml cluster_rs
+# docker stack services cluster_rs
+# docker service ps cluster_rs_worker
+
+version: '3.7'
 services:
   mongo:
     image: mongo
@@ -26,10 +33,10 @@ services:
     #    restart: always
     ports:
       - '2551:2551'
+    #    deploy:
+    #      replicas: 2
     depends_on:
       - cassandra
-    deploy:
-      replicas: 2
     environment:
       PUBLISH_PORT: 2551
       PUBLISH_HOST: master

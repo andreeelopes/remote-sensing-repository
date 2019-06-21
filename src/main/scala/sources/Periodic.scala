@@ -14,7 +14,7 @@ abstract class PeriodicSource(configName: String, config: Config) extends Source
   val epoch: Int = config.getString(s"sources.$configName.epoch").toInt
   val startDelay: FiniteDuration = config.getDuration(s"sources.$configName.start-delay").getSeconds.seconds
 
-  val ingestionHistoryEnd: DateTime = new DateTime()//TODO
+  val ingestionHistoryEnd: DateTime = new DateTime()
   val ingestionHistoryDates: (DateTime, DateTime) = (ingestionHistoryEnd.minusYears(epoch), ingestionHistoryEnd)
   val initialIngestion: (DateTime, DateTime) = (ingestionHistoryEnd, ingestionHistoryEnd.plus(fetchingFrequency.toMillis))
   val epochInitialWork: Work

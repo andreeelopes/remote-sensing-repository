@@ -6,7 +6,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import protocol.master.{Master, MasterSingleton}
-import sources.{CopernicusOSearch, CopernicusOSearchSource, EarthExplorer, EarthExplorerSource, PeriodicWork, Work}
+import sources.{CopernicusOSearchSource, EarthExplorerSource, PeriodicWork, Work}
 import utils.Utils.productsToFetch
 
 import scala.concurrent.duration.FiniteDuration
@@ -47,14 +47,14 @@ class Orchestrator extends Actor with ActorLogging {
     name = "masterProxy")
 
 
-  productsToFetch(config, CopernicusOSearch.configName).foreach { p =>
+  productsToFetch("copernicus-oah-opensearch").foreach { p =>
     p.productType.foreach { pt =>
       val copernicus = new CopernicusOSearchSource(config, p.program, p.platform, pt)
       copernicus.start
     }
   }
 
-  productsToFetch(config, EarthExplorer.configName).foreach { p =>
+  productsToFetch("earth-explorer").foreach { p =>
     p.productType.foreach { pt =>
       val earthExplorer = new EarthExplorerSource(config, p.program, p.platform, pt)
       earthExplorer.start

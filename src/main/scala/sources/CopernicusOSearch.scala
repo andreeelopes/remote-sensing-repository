@@ -12,30 +12,19 @@ import utils.Parsing.processExtractions
 import utils.Utils._
 import ErrorHandlers._
 
-object CopernicusOSearch {
-  final val configName = "copernicus.copernicus-oah-opensearch"
-  final val PROVIDER: String = "copernicus"
-  final val sourceAPI = "copernicus-oah-opensearch"
-}
-
-object CreoDias {
-  final val creodiasConfigName = "creodias.creodias-odata"
-  final val sourceAPI = "creodias-odata"
-}
-
-class CopernicusOSearchSource(val config: Config,
+class CopernicusOSearchSource(config: Config,
                               override val program: String,
                               override val platform: String,
                               override val productType: String)
-  extends ProviderPeriodicRESTSource(CopernicusOSearch.configName, config, program, platform, productType) {
+  extends ProviderPeriodicRESTSource("copernicus-oah-opensearch", config, program, platform, productType) {
 
-  final val configName = CopernicusOSearch.configName
+  override val configName = "copernicus-oah-opensearch"
+  override val PROVIDER: String = "copernicus"
 
   val authConfigOpt = Some(AuthConfig(configName, config))
   val epochInitialWork = new CopernicusOSearchWork(this, ingestionHistoryDates, isEpoch = true)
   val periodicInitialWork = new CopernicusOSearchWork(this, initialIngestion)
 
-  override val PROVIDER: String = CopernicusOSearch.PROVIDER
 }
 
 
@@ -74,7 +63,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     val productId = (node \ "id").as[String]
     val title = (node \ "title").as[String]
-    new File(s"${source.baseDir}/$productId").mkdirs() // TODO data harcoded
+    new File(s"${source.baseDir}/$productId").mkdirs()
 
     setupEntryMongo(productId)
 
@@ -92,15 +81,15 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
   }
 
   private def generateCreodiasWork(productId: String, title: String) = {
-    val creodiasConfigName = CreoDias.creodiasConfigName
+    val creodiasConfigName = "creodias-odata"
     val creodiasBaseUrl = source.config.getString(s"sources.$creodiasConfigName.base-url")
     val creodiasUrl = s"$creodiasBaseUrl/${source.platform.capitalize}/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
 
     val creodiasExt =
-      getAllExtractions(source.config, creodiasConfigName, source.program, source.platform, source.productType)
+      getAllExtractions(creodiasConfigName, source.program, source.platform, source.productType)
 
     if (creodiasExt.nonEmpty)
-      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, CreoDias.sourceAPI, creodiasExt, creodiasErrorHandler),
+      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
         creodiasUrl, productId))
     else
       List()

@@ -4,8 +4,9 @@ import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import protocol.master.MasterWorkerProtocol._
 import sources.Work
-import scala.concurrent.ExecutionContext.Implicits.global
+import utils.Utils
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
 /**
@@ -13,7 +14,8 @@ import scala.concurrent.duration.{Deadline, FiniteDuration, _}
   */
 object Master {
 
-  val ResultsTopic = "results"
+  // sources concurrency limits
+  val sourceLimits: Map[String, Int] = Utils.sourceConcurrencyLimits()
 
   def props(cleanupTimeout: FiniteDuration): Props =
     Props(new Master(cleanupTimeout))
@@ -48,6 +50,7 @@ class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorL
 
   // workState is event sourced to be able to make sure work is processed even in case of crash
   private var workState = WorkState.empty
+
 
   override def receiveRecover: Receive = {
 
@@ -109,7 +112,7 @@ class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorL
               workState = workState.updated(event)
               log.info("Giving worker {} some work {}", workerId, work.workId)
               val newWorkerState = workerState.copy(
-                status = Busy(work.workId, Deadline.now + work.source.workTimeout),
+                status = Busy(work.workId, Deadline.now + work.workTimeout),
                 staleWorkerDeadline = newStaleWorkerDeadline())
               workers += (workerId -> newWorkerState)
               sender() ! work
@@ -127,7 +130,6 @@ class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorL
         log.info("Work {} not in progress, reported as done by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)
         sender ! MasterWorkerProtocol.Ack(workId)
-        //TODO possible duplication of work
       } else {
         log.info("Work {} is done by worker {}", workId, workerId)
         changeWorkerToIdle(workerId, workId)

@@ -19,7 +19,7 @@ abstract class ProviderPeriodicRESTSource(configName: String, config: Config,
   extends PeriodicRESTSource(configName, config) {
   val PROVIDER: String
 
-  val extractions: List[Extraction] = getAllExtractions(config, configName, program, platform, productType)
+  val extractions: List[Extraction] = getAllExtractions(configName, program, platform, productType)
 }
 
 abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRESTSource,
@@ -29,7 +29,7 @@ abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRES
   extends PeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-    singleRequest(url, source.workTimeout, process, ErrorHandlers.defaultErrorHandler, source.authConfigOpt)
+    singleRequest(url, workTimeout, process, ErrorHandlers.defaultErrorHandler, source.authConfigOpt)
   }
 
   override def saveFetchingLog(result: BsonValue): Unit = {
