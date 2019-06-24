@@ -4,6 +4,7 @@ import akka.actor.ActorContext
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import org.joda.time.DateTime
+import sources.handlers.AuthConfig
 import utils.Utils
 
 import scala.concurrent.duration._

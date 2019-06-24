@@ -1,10 +1,12 @@
 package protocol.scheduler
 
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import api.ApiServer
 import protocol.master.{Master, MasterSingleton}
 import sources.{CopernicusOSearchSource, EarthExplorerSource, PeriodicWork, Work}
 import utils.Utils.productsToFetch
@@ -46,6 +48,9 @@ class Orchestrator extends Actor with ActorLogging {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
+  val mediator: ActorRef = DistributedPubSub(context.system).mediator
+  mediator ! DistributedPubSubMediator.Subscribe(ApiServer.requestsTopic, self)
+
 
   productsToFetch("copernicus-oah-opensearch").foreach { p =>
     p.productType.foreach { pt =>
@@ -84,6 +89,9 @@ class Orchestrator extends Actor with ActorLogging {
     case Retry(work) =>
       log.info("Retrying work {}", work.workId)
       sendWork(work)
+
+    case _: DistributedPubSubMediator.SubscribeAck =>
+
   }
 
 

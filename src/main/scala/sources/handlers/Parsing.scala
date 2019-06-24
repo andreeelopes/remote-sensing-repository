@@ -1,4 +1,4 @@
-package utils
+package sources.handlers
 
 import java.nio.charset.StandardCharsets
 
@@ -13,7 +13,7 @@ import org.joda.time.format.DateTimeFormat
 import org.json.XML
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDocument, BsonDouble, BsonInt64, BsonString}
 import play.api.libs.json.{JsValue, Json}
-import sources.{Extraction, Transformations}
+import sources.Extraction
 import utils.Utils.{dateFormat, writeFile}
 
 import scala.util.{Failure, Success, Try}

@@ -1,4 +1,4 @@
-package sources
+package sources.handlers
 
 import com.typesafe.config.Config
 

@@ -1,6 +1,6 @@
 package utils
 
-import sources.{AuthConfig, Work}
+import sources.Work
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -10,6 +10,7 @@ import DefaultBodyReadables._
 import akka.actor.{ActorContext, ActorRef}
 import akka.stream.ActorMaterializer
 import protocol.worker.WorkExecutor.WorkComplete
+import sources.handlers.AuthConfig
 
 import scala.concurrent.duration._
 

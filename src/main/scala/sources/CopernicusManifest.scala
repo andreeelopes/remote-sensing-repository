@@ -11,9 +11,10 @@ import net.minidev.json.JSONArray
 import org.json.XML
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import play.api.libs.json.{JsValue, Json}
+import sources.handlers.{AuthComponent, AuthConfig, ErrorHandlers}
 import utils.{HTTPClient, ResourceDoesNotExistException}
 import utils.HTTPClient._
-import utils.Parsing.processExtractions
+import sources.handlers.Parsing.processExtractions
 import utils.Utils._
 
 import scala.util.{Failure, Success, Try}

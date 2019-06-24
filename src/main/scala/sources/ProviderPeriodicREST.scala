@@ -8,6 +8,7 @@ import org.joda.time.DateTime
 import org.json.HTTP
 import org.mongodb.scala.{Completed, Document}
 import org.mongodb.scala.bson.{BsonDocument, BsonInt64, BsonString, BsonValue}
+import sources.handlers.ErrorHandlers
 import utils.HTTPClient
 import utils.HTTPClient._
 import utils.Utils.{dateFormat, getAllExtractions}

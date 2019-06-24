@@ -1,12 +1,12 @@
-package sources
+package sources.handlers
 
 import mongo.MongoDAO
-import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory
-import org.locationtech.jts.geom.{Coordinate, CoordinateFilter, CoordinateSequenceFactory, GeometryFactory}
+import org.locationtech.jts.geom.{Coordinate, CoordinateFilter, GeometryFactory}
 import org.locationtech.jts.io.WKTReader
 import org.locationtech.jts.io.geojson.GeoJsonWriter
 import org.locationtech.jts.io.gml2.GMLReader
 import play.api.libs.json.{JsObject, JsValue, Json}
+import sources.Extraction
 
 object Transformations {
 

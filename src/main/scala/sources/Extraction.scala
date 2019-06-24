@@ -3,8 +3,9 @@ package sources
 import akka.actor.{ActorContext, ActorRef}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import sources.handlers.{AuthConfig, ErrorHandlers}
 import utils.HTTPClient._
-import utils.Parsing._
+import sources.handlers.Parsing._
 
 
 case class Extraction(name: String, queryType: String, resultType: String, resultTypeAftrTransf: String,

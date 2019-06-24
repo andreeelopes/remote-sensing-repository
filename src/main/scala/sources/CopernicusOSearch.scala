@@ -8,9 +8,10 @@ import org.joda.time.DateTime
 import org.json.XML
 import org.mongodb.scala.bson.BsonDocument
 import play.api.libs.json.{JsObject, JsValue, Json}
-import utils.Parsing.processExtractions
+import sources.handlers.AuthConfig
+import sources.handlers.Parsing.processExtractions
 import utils.Utils._
-import ErrorHandlers._
+import sources.handlers.ErrorHandlers._
 
 class CopernicusOSearchSource(config: Config,
                               override val program: String,

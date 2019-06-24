@@ -11,12 +11,13 @@ import org.mongodb.scala.bson.{BsonDocument, BsonString}
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import utils.HTTPClient.singleRequest
 import utils.Utils.dateFormat
-import ErrorHandlers._
+import sources.handlers.ErrorHandlers._
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.jayway.jsonpath.JsonPath
 import mongo.MongoDAO
 import org.mongodb.scala.Document
-import utils.Parsing.{jsonConf, processExtractions}
+import sources.handlers.ErrorHandlers
+import sources.handlers.Parsing.{jsonConf, processExtractions}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._

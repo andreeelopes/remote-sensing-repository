@@ -44,12 +44,12 @@ lazy val dependencies =
     // this allows us to start cassandra from the sample
     val akkaPersistenceCassandraLauncher = "com.typesafe.akka" %% "akka-persistence-cassandra-launcher" % cassandraPluginVersion
     val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-    val akkaHttpXML = "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion
 
     val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
     val lockbackClassid = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
     // test dependencies
+    val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
     val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
     val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     val commonsIO = "commons-io" % "commons-io" % "2.4" % "test"
@@ -78,7 +78,7 @@ lazy val commonDependencies = Seq(
   dependencies.akkaPersistenceCassandra,
   dependencies.akkaPersistenceCassandraLauncher,
   dependencies.akkaHttp,
-  dependencies.akkaHttpXML,
+  dependencies.akkaHttpTestKit,
   dependencies.akkaSlf4j,
   dependencies.lockbackClassid,
   dependencies.akkaTestkit,

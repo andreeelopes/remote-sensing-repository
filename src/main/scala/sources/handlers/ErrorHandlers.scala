@@ -1,4 +1,4 @@
-package sources
+package sources.handlers
 
 import java.nio.charset.StandardCharsets
 
@@ -8,14 +8,14 @@ import mongo.MongoDAO
 import org.mongodb.scala.bson.BsonString
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
-
-import scala.concurrent.duration._
-import play.api.libs.ws.DefaultBodyReadables._
-import utils.{AuthException, InternalServerError, OfflineServiceException, RateLimitException, ResourceDoesNotExistException}
+import utils._
 
 import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
+import play.api.libs.ws.DefaultBodyReadables._
 import scala.concurrent.ExecutionContext.Implicits.global
+
 
 object ErrorHandlers {
 
