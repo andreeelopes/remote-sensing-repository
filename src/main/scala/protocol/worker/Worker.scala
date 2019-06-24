@@ -63,7 +63,6 @@ class Worker(masterProxy: ActorRef)
 
     case _: Work =>
       log.warning("Yikes. Master told me to do work, while I'm already working.")
-
   }
 
   def waitForWorkIsDoneAck(nextWork: List[Work]): Receive = {
@@ -85,7 +84,9 @@ class Worker(masterProxy: ActorRef)
   override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
     case _: ActorInitializationException => Stop
     case _: Exception =>
-      currentWorkId foreach { workId => masterProxy ! WorkFailed(workerId, workId) }
+      currentWorkId foreach { workId =>
+        masterProxy ! WorkFailed(workerId, workId)
+      }
       context.become(idle)
       Restart
   }

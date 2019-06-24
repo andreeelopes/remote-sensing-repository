@@ -82,9 +82,10 @@ class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorL
           staleWorkerDeadline = newStaleWorkerDeadline())
         workers += (workerId -> initialWorkerState)
 
-        if (workState.hasWork)
-          sender() ! MasterWorkerProtocol.WorkIsReady
       }
+      //send workIsReady even if worker was already registered -> when work fails and has backoff time
+      if (workState.hasWork)
+        sender() ! MasterWorkerProtocol.WorkIsReady
 
     // #graceful-remove
     case DeRegisterWorker(workerId) =>
