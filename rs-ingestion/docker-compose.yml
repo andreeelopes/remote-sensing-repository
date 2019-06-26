@@ -1,0 +1,99 @@
+#  docker-compose --compatibility up
+
+# docker swarm init
+# docker stack deploy --compose-file docker-compose.yml cluster_rs
+# docker stack services cluster_rs
+# docker service ps cluster_rs_worker
+
+version: '3.7'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - '27017:27017'
+    #    container_name: mongo
+    #    restart: always
+    volumes:
+      - ./mongo_data:/data/db
+  cassandra:
+    image: cassandra
+    #    container_name: cassandra
+    #    restart: always
+    ports:
+      - '9042:9042'
+    environment:
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+    volumes:
+      - ./cassandra_data:/var/lib/cassandra
+  master:
+    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    #    container_name: master
+    command: ["bash", "/wait-for-it.sh", "cassandra:9042", "--", "java", "-jar", "/app.jar" , '2551']
+    #    restart: always
+    ports:
+      - '2551:2551'
+    #    deploy:
+    #      replicas: 2
+    depends_on:
+      - cassandra
+    environment:
+      PUBLISH_PORT: 2551
+      PUBLISH_HOST: master
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+
+  orchestrator:
+    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    #    container_name: orchestrator
+    command: ["bash", "/wait-for-it.sh", "master:2551", "--",
+              "bash", "/wait-for-it.sh", "mongo:27017", "--",
+              "java", "-jar", "/app.jar" , '3001']
+    #    restart: always
+    ports:
+      - '3001:3001'
+    depends_on:
+      - master
+    environment:
+      PUBLISH_PORT: 3001
+      PUBLISH_HOST: orchestrator
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+
+  worker:
+    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    #    container_name: worker
+    command: ["bash", "/wait-for-it.sh", "master:2551", "--",
+              "bash", "/wait-for-it.sh", "mongo:27017", "--",
+              "java", "-jar", "/app.jar" , '5001', '2']
+    #    restart: always
+    depends_on:
+      - master
+    deploy:
+      replicas: 5
+    ports:
+      - '5001:5001'
+    environment:
+      PUBLISH_PORT: 5001
+      PUBLISH_HOST: worker
+      SEED_PORT_TCP_ADDR: master
+      CASSANDRA_IP_TCP_ADDR: cassandra
+      MONGO_IP_TCP_ADDR: mongo
+      BASE_DIR: /data
+    volumes:
+      - ./rs_data:/data
+
+  api:
+    image: andrelopes/rs-api:0.1-SNAPSHOT
+    #    container_name: worker
+    command: ["bash", "/wait-for-it.sh", "mongo:27017", "--",
+              "java", "-jar", "/app.jar"]
+    #    restart: always
+    depends_on:
+      - mongo
+    ports:
+      - '8080:8080'
+    environment:
+      MONGO_IP_TCP_ADDR: mongo
