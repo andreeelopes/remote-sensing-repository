@@ -31,12 +31,13 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfo(
-                "Ecma Events",
-                "Application that allows Ecma to manage events envolving other partner companies",
+                "Remote Sensing API",
+                "Application that allows management of remote sensing products",
                 "API TOS",
                 "Terms of service",
-                new Contact("Ecma", "www.ecma.com", "ecma@company.com"),
-                "License of API", "API license URL", Collections.emptyList());
+                new Contact("rs-api", "www.rs-api.", "rs-api@company.com"),
+                "License of API", "API license URL", Collections.emptyList()
+        );
     }
 
 
