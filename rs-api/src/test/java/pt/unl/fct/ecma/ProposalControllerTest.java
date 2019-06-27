@@ -51,7 +51,7 @@
 //    private EmployeeRepository employeeRepository;
 //
 //    @Autowired
-//    private ProposalRepository proposalRepository;
+//    private ProductRepository proposalRepository;
 //
 //    @Autowired
 //    private ProposalRoleRepository proposalRoleRepository;

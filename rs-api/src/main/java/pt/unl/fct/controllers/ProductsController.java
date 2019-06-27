@@ -1,12 +1,20 @@
 package pt.unl.fct.controllers;
 
 
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.unl.fct.api.ProductsApi;
-import pt.unl.fct.models.Product;
+import pt.unl.fct.errors.BadRequestException;
+import pt.unl.fct.model.Product;
 import pt.unl.fct.services.ProductService;
+
+import javax.validation.Valid;
 
 @RestController
 public class ProductsController implements ProductsApi {
@@ -15,8 +23,21 @@ public class ProductsController implements ProductsApi {
     private ProductService productService;
 
     @Override
-    public Product getProduct(@PathVariable("productId") Long productId) {
+    public Object getProduct(@ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId) {
         return productService.getProduct(productId);
+    }
+
+    @Override
+    public Page<Product> getProducts(@ApiParam(value = "MongoDB Query") @Valid @RequestBody(required = false) String mongoQuery,
+                                     @ApiParam(value = "Page") @RequestParam(defaultValue = "0", required = false) String page,
+                                     @ApiParam(value = "Page Size") @RequestParam(defaultValue = "100", required = false) String pageSize) {
+        try {
+            new BasicQuery(mongoQuery);
+        } catch (Exception e) {
+            throw new BadRequestException("Malformed query");
+        }
+
+        return productService.getProducts(mongoQuery, Integer.parseInt(page), Integer.parseInt(pageSize));
     }
 
 }

@@ -1,8 +1,9 @@
-package pt.unl.fct.repositories;
-
-import org.springframework.data.repository.CrudRepository;
-import pt.unl.fct.models.Product;
-
-
-public interface ProductRepository extends CrudRepository<Product, Long> {
-}
+//package pt.unl.fct.repositories;
+//
+//import org.springframework.data.mongodb.repository.MongoRepository;
+//import org.springframework.data.repository.CrudRepository;
+//
+//
+//public interface ProductRepository extends MongoRepository<Object, String>, CrudRepository<Object, String> {
+//
+//}

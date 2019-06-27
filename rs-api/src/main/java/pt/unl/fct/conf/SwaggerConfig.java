@@ -19,6 +19,9 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+
+    //  UI endpoint ->  localhost:8080/swagger-ui.html
+
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)

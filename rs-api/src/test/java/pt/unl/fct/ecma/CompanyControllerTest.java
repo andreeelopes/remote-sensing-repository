@@ -201,12 +201,12 @@
 //                .contentType(MediaType.APPLICATION_JSON_UTF8)
 //                .content("{\"id\":\"2\",\"name\":\"Andre\", \"job\":\"Canalizador\", \"username\":\"andre\" , \"email\":\"andre@\" , \"password\":\"" + "andre" + "\"}"))
 //                .andExpect(status().isOk());
-//        List<Employee> admins = getEmployees(company,1);
+//        List<Employee> admins = getProducts(company,1);
 //
 //        assertTrue(admins.stream().anyMatch( (p) -> p.getName().equals("Andre")));
 //    }
 //
-//    private List<Employee> getEmployees(Company company,int sizeExpected) throws Exception {
+//    private List<Employee> getProducts(Company company,int sizeExpected) throws Exception {
 //        final MvcResult result = this.mockMvc.perform(get("/companies/" + company.getId() + "/employees"))
 //                .andExpect(status().isOk())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -226,7 +226,7 @@
 //        List<Company> companies = getCompanies(1);
 //        Company company = companies.get(0);
 //
-//        getEmployees(company,0);
+//        getProducts(company,0);
 //    }
 //
 //    @Test
@@ -269,7 +269,7 @@
 //                .content("{\"id\":\"2\",\"name\":\"Andre\", \"job\":\"Canalizador\", \"username\":\"andre\" , \"email\":\"andre@\" , \"password\":\"" + "andre" + "\"}"))
 //                .andExpect(status().isOk());
 //
-//        List<Employee> employees = getEmployees(company,1);
+//        List<Employee> employees = getProducts(company,1);
 //        Employee employee = employees.get(0);
 //
 //        this.mockMvc.perform(delete("/companies/"+company.getId() + "/employees/" + employee.getId()))
