@@ -34,9 +34,8 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 //
 //
 //  val docStr = XML.toJSONObject(lines).toString
-//  val a = (Json.parse(docStr) \ "xfdu:XFDU" \ "dataObjectSection" \ "dataObject").as[List[JsValue]]
 //
-//  println(a)
+//  println(XML.toJSONObject(lines).toString(2))
 //
 //  import java.io.PrintWriter
 //  new PrintWriter("b.json") { write(XML.toJSONObject(lines).toString); close }

@@ -32,7 +32,4 @@ public class Product {
 
     private String metadataFile;
 
-
-
-
 }
