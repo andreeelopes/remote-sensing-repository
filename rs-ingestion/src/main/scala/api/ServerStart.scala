@@ -25,7 +25,7 @@ class ServerStart(port: Int, serverActor: ActorRef, actorSystem: ActorSystem) ex
   val host: String = config.getString("clustering.ip")
 
   //#http-server
-  val serverBinding: Future[Http.ServerBinding] = Http().bindAndHandle(routes, host, 8080) // TODO external ip
+  val serverBinding: Future[Http.ServerBinding] = Http().bindAndHandle(routes, host, 8081) //TODO
 
   serverBinding.onComplete {
     case Success(bound) =>

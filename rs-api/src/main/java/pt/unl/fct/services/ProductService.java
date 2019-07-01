@@ -9,10 +9,17 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 import pt.unl.fct.errors.NotFoundException;
+import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
+import pt.unl.fct.utils.Utils;
 
+import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -46,5 +53,10 @@ public class ProductService {
                 pageable,
                 () -> mongoTemplate.count(query, Product.class));
     }
+
+    public void fetchProductData(FetchData fetchData) throws IOException {
+        Utils.fetchHttpPost(fetchData);
+    }
+
 
 }

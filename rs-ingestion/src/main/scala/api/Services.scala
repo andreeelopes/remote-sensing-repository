@@ -9,11 +9,12 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import mongo.MongoDAO
 import org.mongodb.scala.bson.{BsonDocument, BsonString, BsonValue}
+import play.api.libs.json.{JsArray, JsValue, Json}
+import sources.handlers.AuthConfig
 
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 object Services {
@@ -49,25 +50,41 @@ class Services extends Actor with ActorLogging {
       val doc = Await.result(docFut, 5000 millis)
 
       if (doc != null) {
+        val json = Json.parse(doc.toJson())
 
-        val program = doc.getString("program")
-        val tierOpt = doc.getString("collectionTier") //sentinels do not have this field
-        val dataObjectDocOpt = doc.get(s"data.$dataObjectId")
+        val data = (json \ "data").as[Map[String, JsValue]]
 
-        if (dataObjectDocOpt.isEmpty)
-          router ! ActionPerformed(StatusCodes.BadRequest.intValue, "Requested data is not available")
-        else if (tierOpt != "T1" || tierOpt != "RT" || tierOpt != null)
-          router ! ActionPerformed(StatusCodes.BadRequest.intValue, "Landsat data only available for T1 or RT tier")
+        val nonImageryDataOpt =
+          Try {
+            data.filter { kv =>
+              val idOpt = kv._2 \ "_id"
+              idOpt.isDefined && idOpt.get.as[String] == dataObjectId
+            }.head._2
+          }.toOption
+
+        val imageryDataOpt =
+          Try {
+            data("imagery").as[JsArray].value
+              .filter { dataObject =>
+                val idOpt = dataObject \ "_id"
+                idOpt.isDefined && idOpt.get.as[String] == dataObjectId
+              }.head
+          }.toOption
+
+
+        if (nonImageryDataOpt.isEmpty && imageryDataOpt.isEmpty)
+          router ! ActionPerformed(StatusCodes.NotFound.intValue, "Requested data is not available")
         else {
-          val configName = if (program == "landsat") "amazon" else "copernicus-oah-odata"
 
-          val dataObjectDoc = dataObjectDocOpt.get.asDocument()
-          val status = dataObjectDoc.get("status").asString()
+          val dataObject = if (imageryDataOpt.isDefined) imageryDataOpt.get else nonImageryDataOpt.get
+          val status = (dataObject \ "status").as[String]
+          val url = (dataObject \ "url").as[String]
+          val fileName = (dataObject \ "fileName").as[String] //try TODO
+          val size = Try((dataObject \ "size").as[Long]).toOption.getOrElse[Long](111111111)
 
-          if (status.toString == "remote") {
-            val url = dataObjectDoc.get("url").asString().toString
-
-            val work: Work = new FetchAndSaveWork(new FetchAndSaveSource(configName), productId, dataObjectId, url)
+          if (status == "remote") {
+            val work: Work = new FetchAndSaveWork(new FetchAndSaveSource("copernicus-oah-odata"),
+              productId, dataObjectId, url, size, fileName)
 
             // send To Orchestrator
             mediator ! DistributedPubSubMediator.Publish(requestsTopic, FetchDataWork(work))

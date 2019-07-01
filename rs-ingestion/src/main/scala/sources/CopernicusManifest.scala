@@ -90,10 +90,12 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     workToBeDone
   }
 
+
   private def processObjectsURL(dataObjects: List[JsValue]): Unit = {
 
     val mongoSubDoc =
-      if (source.platform == "sentinel2") processObjectsSentinel2(dataObjects)
+      if (source.productType == "S2MSI1C") processObjectsS2MSI1C(dataObjects)
+      else if (source.productType == "S2MSI2A") processObjectsS2MSI2A(dataObjects)
       else if (source.platform == "sentinel1") processObjectsSentinel1(dataObjects)
       // sentinel 3 products are hard to unify
       else if (source.productType == "OL_1_ERR___")
@@ -135,21 +137,79 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
       val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+      val fileName = href.split("/").last
+      val size = (obj \ "byteStream" \ "size").as[Long]
 
       val fileUrl = transformURL(href)._1
 
-      mongoSubDoc.append(manifestId, BsonDocument("status" -> BsonString("remote"), "url" -> BsonString(fileUrl)))
+      val mongoSubDoc = BsonDocument(
+        "_id" -> BsonString(generateUUID()),
+        "status" -> BsonString("remote"),
+        "fileName" -> BsonString(fileName),
+        "url" -> BsonString(fileUrl),
+        "size" -> BsonInt64(size)
+      )
+
+      mongoSubDoc.append(manifestId, mongoSubDoc)
     }
     mongoSubDoc
   }
 
-  private def processObjectsSentinel2(dataObjects: List[JsValue]): BsonDocument = {
+  private def processObjectsS2MSI2A(dataObjects: List[JsValue]): BsonDocument = {
     var mongoSubDoc = BsonDocument()
     var imageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
       val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+      val fileName = href.split("/").last
+      val size = (obj \ "byteStream" \ "size").as[Long]
+      val fileUrl = transformURL(href)._1
+
+      if (manifestId.startsWith("IMG_DATA")) {
+        //  IMG_DATA_Band_B09_60m_Tile1_Data -> [IMG, DATA, Band, B09, 60m, Tile1, Data]
+        val splitId = manifestId.split("_")
+        val band =
+          if (splitId(3).startsWith("B0")) splitId(3).replace("B0", "")
+          else if (splitId(3).startsWith("B1")) splitId(3).replace("B1", "1")
+          else splitId(3)
+
+        imageryDoc.add(
+          BsonDocument(
+            "_id" -> BsonString(generateUUID()),
+            "band" -> BsonString(band),
+            "tile" -> BsonString(splitId(5).replace("Tile", "")),
+            "resolution" -> BsonString(splitId(4)),
+            "url" -> BsonString(fileUrl),
+            "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
+            "size" -> BsonInt64(size)
+          ))
+      }
+      else {
+        val updatedMongoSubDoc = BsonDocument(
+          "_id" -> BsonString(generateUUID()),
+          "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
+          "url" -> BsonString(fileUrl),
+          "size" -> BsonInt64(size)
+        )
+        mongoSubDoc.append(manifestId, updatedMongoSubDoc)
+      }
+    }
+
+    mongoSubDoc.append("imagery", imageryDoc)
+    mongoSubDoc
+  }
+
+  private def processObjectsS2MSI1C(dataObjects: List[JsValue]): BsonDocument = {
+    var mongoSubDoc = BsonDocument()
+    var imageryDoc = BsonArray()
+
+    dataObjects.foreach { obj =>
+      val manifestId = (obj \ "ID").as[String]
+      val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+      val fileName = href.split("/").last
       val size = (obj \ "byteStream" \ "size").as[Long]
       val fileUrl = transformURL(href)._1
 
@@ -159,17 +219,21 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
         imageryDoc.add(
           BsonDocument(
+            "_id" -> BsonString(generateUUID()),
             "band" -> BsonString(splitId(4)),
-            "tile" -> BsonString(splitId(5)),
+            "tile" -> BsonString(splitId(5).replace("Tile", "")),
             "resolution" -> BsonString(splitId(3)),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
             "size" -> BsonInt64(size)
           ))
       }
       else {
         val updatedMongoSubDoc = BsonDocument(
+          "_id" -> BsonString(generateUUID()),
           "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
           "url" -> BsonString(fileUrl),
           "size" -> BsonInt64(size)
         )
@@ -188,6 +252,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
       val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+      val fileName = href.split("/").last
       val size = (obj \ "byteStream" \ "size").as[Long]
       val fileUrl = transformURL(href)._1
 
@@ -199,17 +264,21 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
         imageryDoc.add(
           BsonDocument(
+            "_id" -> BsonString(generateUUID()),
             "polarisation" -> BsonString(name(3)),
             "swathId" -> BsonString(name(1)),
             "imageNumber" -> BsonString(name.last),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
             "size" -> BsonInt64(size)
           ))
       }
       else {
         val updatedMongoSubDoc = BsonDocument(
+          "_id" -> BsonString(generateUUID()),
           "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
           "url" -> BsonString(fileUrl),
           "size" -> BsonInt64(size)
         )
@@ -228,6 +297,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
       val href = (obj \ "byteStream" \ "fileLocation" \ "href").as[String]
+      val fileName = href.split("/").last
       val size = (obj \ "byteStream" \ "size").as[Long]
       val fileUrl = transformURL(href)._1
 
@@ -237,7 +307,9 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
         imageryDoc.add(
           BsonDocument(
+            "_id" -> BsonString(generateUUID()),
             "band" -> BsonString(splitId(0)),
+            "fileName" -> BsonString(fileName),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
             "size" -> BsonInt64(size)
@@ -245,7 +317,9 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
       }
       else {
         val updatedMongoSubDoc = BsonDocument(
+          "_id" -> BsonString(generateUUID()),
           "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
           "url" -> BsonString(fileUrl),
           "size" -> BsonInt64(size)
         )

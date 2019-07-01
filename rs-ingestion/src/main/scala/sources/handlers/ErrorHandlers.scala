@@ -62,6 +62,7 @@ object ErrorHandlers {
               .get
               .map { response =>
                 val body = response.body[String]
+
                 val token = (Json.parse(body) \ "data").as[String]
 
                 MongoDAO.updateToken("token", BsonString(token))

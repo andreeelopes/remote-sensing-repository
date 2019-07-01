@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.unl.fct.api.ProductsApi;
 import pt.unl.fct.errors.BadRequestException;
+import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
 import pt.unl.fct.services.ProductService;
 
 import javax.validation.Valid;
+import java.io.IOException;
 
 @RestController
 public class ProductsController implements ProductsApi {
@@ -25,6 +27,11 @@ public class ProductsController implements ProductsApi {
     @Override
     public Object getProduct(@ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId) {
         return productService.getProduct(productId);
+    }
+
+    @Override
+    public void fetchProductData(@ApiParam(value = "Data object to be fetched") @Valid @RequestBody FetchData fetchData) throws IOException {
+        productService.fetchProductData(fetchData);
     }
 
     @Override
