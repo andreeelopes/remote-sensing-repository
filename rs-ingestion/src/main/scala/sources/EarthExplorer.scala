@@ -65,9 +65,9 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-//    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "data" \ "results").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+    (doc \ "data" \ "results").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
     saveFetchingLog(BsonDocument(docJson))
 

@@ -35,6 +35,21 @@ public class ProductsController implements ProductsApi {
     }
 
     @Override
+    public void addProduct(@Valid Product product) {
+
+    }
+
+    @Override
+    public void updateProduct(String productId, @Valid Product product) {
+
+    }
+
+    @Override
+    public void deleteProductData(Long productId, Long dataID) {
+
+    }
+
+    @Override
     public Page<Product> getProducts(@ApiParam(value = "MongoDB Query") @Valid @RequestBody(required = false) String mongoQuery,
                                      @ApiParam(value = "Page") @RequestParam(defaultValue = "0", required = false) String page,
                                      @ApiParam(value = "Page Size") @RequestParam(defaultValue = "100", required = false) String pageSize) {

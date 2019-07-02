@@ -1,6 +1,7 @@
 package sources.handlers
 
 import mongo.MongoDAO
+import org.joda.time.DateTime
 import org.locationtech.jts.geom.{Coordinate, CoordinateFilter, GeometryFactory}
 import org.locationtech.jts.io.WKTReader
 import org.locationtech.jts.io.geojson.GeoJsonWriter
@@ -10,6 +11,8 @@ import sources.Extraction
 
 object Transformations {
 
+
+
   def transform(productId: String, extraction: Extraction, value: Any): Any = {
 
     if (extraction.updateUrl)
@@ -18,10 +21,19 @@ object Transformations {
     extraction.name match {
       case "footprint" => gmlToGeoJson(value.asInstanceOf[String])
       case "spatialFootprint" => removeFirstAndLast(value.asInstanceOf[JsValue])
+      case "beginposition-day" | "start_time_day" | "Acquisition Start Day" => extractDay(value.asInstanceOf[DateTime])
+      case "beginposition-month" | "start_time_month" | "Acquisition Start Month" => extractMonth(value.asInstanceOf[DateTime])
       case _ => value
     }
   }
 
+  def extractDay(time: DateTime): Any = {
+    time.dayOfMonth().get()
+  }
+
+  def extractMonth(time: DateTime): Any = {
+    time.monthOfYear().get()
+  }
 
   def wktToGeoJson(value: String): String = {
     val geometry = new WKTReader().read(value)

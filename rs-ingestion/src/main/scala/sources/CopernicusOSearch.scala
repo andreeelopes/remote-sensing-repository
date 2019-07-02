@@ -50,9 +50,9 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-//    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "feed" \ "entry").as[List[JsObject]].headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+    (doc \ "feed" \ "entry").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
 
     saveFetchingLog(BsonDocument(docJson))
 
