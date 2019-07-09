@@ -30,19 +30,10 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 ////
 //object Test extends App {
 //
-//  val lines = scala.io.Source.fromFile("a.txt").mkString
-//
-//
-//  val docStr = XML.toJSONObject(lines).toString
-//
-//  println(XML.toJSONObject(lines).toString(2))
-//
-//  import java.io.PrintWriter
-//  new PrintWriter("b.json") { write(XML.toJSONObject(lines).toString); close }
 //
 //
 //}
-
+//
 
 //  val mongoClient: MongoClient = MongoClient()
 //  Thread.sleep(1000)

@@ -4,14 +4,18 @@ import akka.actor.ActorContext
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
 import mongo.MongoDAO
+import org.joda.time
 import org.joda.time.DateTime
 import org.json.HTTP
 import org.mongodb.scala.{Completed, Document}
-import org.mongodb.scala.bson.{BsonDocument, BsonInt64, BsonString, BsonValue}
+import org.mongodb.scala.bson.{BsonDateTime, BsonDocument, BsonInt64, BsonString, BsonValue}
+import protocol.scheduler.Orchestrator.ProduceWork
 import sources.handlers.ErrorHandlers
 import utils.HTTPClient
 import utils.HTTPClient._
 import utils.Utils.{dateFormat, getAllExtractions}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class ProviderPeriodicRESTSource(configName: String, config: Config,
                                           val program: String,
@@ -21,28 +25,45 @@ abstract class ProviderPeriodicRESTSource(configName: String, config: Config,
   val PROVIDER: String
 
   val extractions: List[Extraction] = getAllExtractions(configName, program, platform, productType)
+
+  override def start(implicit context: ActorContext): Unit = {
+
+    val doc = MongoDAO.getLastPeriodicLogByProductType(productType)
+
+    if (doc.isEmpty) {
+      context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(epochWork))
+      context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork))
+    } else {
+      val endDate = new DateTime(doc.get.getDocument("query").getDateTime("endDate").getValue)
+
+      val periodicWork = generateWork((endDate, new DateTime()))
+      context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicWork))
+    }
+  }
+
 }
 
 abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRESTSource,
-                                        override val ingestionDates: (DateTime, DateTime),
+                                        override val intervalDates: (DateTime, DateTime),
                                         override val isEpoch: Boolean = false,
                                         override val pageStart: Int = 0)
-  extends PeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
+  extends PeriodicRESTWork(source, intervalDates, isEpoch, pageStart) {
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
     singleRequest(url, workTimeout, process, ErrorHandlers.defaultErrorHandler, source.authConfigOpt)
   }
 
-  override def saveFetchingLog(result: BsonValue): Unit = {
+  def saveFetchingLog(result: BsonValue): Unit = {
     val bsonDoc: BsonDocument = BsonDocument(
+      "_id" -> BsonString(s"${source.productType}-${intervalDates._1}-${intervalDates._2}-$pageStart"),
       "query" -> BsonDocument(
         "url" -> BsonString(url),
         "provider" -> BsonString(source.PROVIDER),
         "productType" -> BsonString(source.productType),
         "pageStart" -> BsonInt64(pageStart),
         "pageEnd" -> BsonInt64(pageStart + source.pageSize),
-        "startDate" -> BsonString(ingestionDates._1.toString(dateFormat)),
-        "endDate" -> BsonString(ingestionDates._2.toString(dateFormat)),
+        "startDate" -> BsonDateTime(intervalDates._1.toDate),
+        "endDate" -> BsonDateTime(intervalDates._2.toDate),
       ),
       "result" -> result,
     )
@@ -51,15 +72,18 @@ abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRES
 
   def setupEntryMongo(productId: String): Unit = {
     MongoDAO.insertDoc(
-      Document(
+      BsonDocument(
         "_id" -> productId,
         "program" -> source.program,
         "platform" -> source.platform,
-        "productType" -> source.productType
-      ),
-      MongoDAO.PRODUCTS_COL)
+        "productType" -> source.productType,
+        "provider" -> source.PROVIDER
+      )
+    )
   }
 
 
 }
+
+
 

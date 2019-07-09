@@ -73,7 +73,7 @@ class Orchestrator extends Actor with ActorLogging {
     case FetchDataWork(work) =>
       log.info(s"Adhoc fetching work produced - ${work.workId}")
       sendWork(work)
-      sender() ! ActionPerformed(StatusCodes.Accepted.intValue, s"Work submitted - ${work.workId}")
+      sender() ! ActionPerformed(StatusCodes.Accepted.intValue, s"Work submitted")
 
     case ProduceWork(work) =>
       log.info(s"Produced work - $work")

@@ -15,26 +15,12 @@ abstract class PeriodicRESTSource(configName: String, config: Config) extends Pe
 }
 
 abstract class PeriodicRESTWork(override val source: PeriodicRESTSource,
-                                override val ingestionDates: (DateTime, DateTime),
+                                override val intervalDates: (DateTime, DateTime),
                                 override val isEpoch: Boolean = false,
-                                val pageStart: Int = 0) extends PeriodicWork(source, ingestionDates, isEpoch) {
+                                val pageStart: Int = 0) extends PeriodicWork(source, intervalDates, isEpoch) {
 
   val url: String
 
   def getNextPagesWork(doc: JsValue): Option[Work]
-
-  def saveFetchingLog(result: BsonValue): Unit = {
-    val bsonDoc: BsonDocument = BsonDocument(
-      "query" -> BsonDocument(
-        "url" -> BsonString(url),
-        "pageStart" -> BsonInt64(pageStart),
-        "pageEnd" -> BsonInt64(pageStart + source.pageSize),
-        "startDate" -> BsonString(ingestionDates._1.toString(dateFormat)),
-        "endDate" -> BsonString(ingestionDates._2.toString(dateFormat)),
-      ),
-      "result" -> result,
-    )
-    MongoDAO.insertDoc(bsonDoc, MongoDAO.PERIODIC_FETCHING_LOG_COL)
-  }
 
 }

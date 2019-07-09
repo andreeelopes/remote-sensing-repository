@@ -11,8 +11,6 @@ import protocol.master.MasterSingleton
 import protocol.scheduler.Orchestrator
 import protocol.worker.Worker
 
-import scala.util.{Failure, Success, Try}
-
 
 object Main {
 

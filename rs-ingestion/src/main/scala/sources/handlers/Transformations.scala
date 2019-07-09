@@ -12,7 +12,6 @@ import sources.Extraction
 object Transformations {
 
 
-
   def transform(productId: String, extraction: Extraction, value: Any): Any = {
 
     if (extraction.updateUrl)
@@ -21,18 +20,18 @@ object Transformations {
     extraction.name match {
       case "footprint" => gmlToGeoJson(value.asInstanceOf[String])
       case "spatialFootprint" => removeFirstAndLast(value.asInstanceOf[JsValue])
-      case "beginposition-day" | "start_time_day" | "Acquisition Start Day" => extractDay(value.asInstanceOf[DateTime])
-      case "beginposition-month" | "start_time_month" | "Acquisition Start Month" => extractMonth(value.asInstanceOf[DateTime])
+      case "beginposition-dayofyear" |
+           "endposition-dayofyear" |
+           "start_time_dayofyear" |
+           "stop_time_dayofyear" |
+           "Acquisition Start Day of Year" |
+           "Acquisition End Day of Year" => extractDayofYear(value.asInstanceOf[DateTime])
       case _ => value
     }
   }
 
-  def extractDay(time: DateTime): Any = {
-    time.dayOfMonth().get()
-  }
-
-  def extractMonth(time: DateTime): Any = {
-    time.monthOfYear().get()
+  def extractDayofYear(time: DateTime): Any = {
+    time.dayOfYear().get()
   }
 
   def wktToGeoJson(value: String): String = {

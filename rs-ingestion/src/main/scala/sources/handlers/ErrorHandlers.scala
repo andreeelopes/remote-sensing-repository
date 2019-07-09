@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import mongo.MongoDAO
-import org.mongodb.scala.bson.BsonString
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import utils._
@@ -14,6 +14,7 @@ import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
 import play.api.libs.ws.DefaultBodyReadables._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -65,7 +66,10 @@ object ErrorHandlers {
 
                 val token = (Json.parse(body) \ "data").as[String]
 
-                MongoDAO.updateToken("token", BsonString(token))
+                MongoDAO.updateToken(BsonString(token))
+                MongoDAO.updateCookies(
+                  BsonArray(response.cookies.map { c => BsonDocument("name" -> c.name, "value" -> c.value) })
+                )
               }
               .andThen { case _ => wsClient.close() }
 

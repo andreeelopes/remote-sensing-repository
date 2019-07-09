@@ -10,7 +10,7 @@ services:
   mongo:
     image: mongo
     ports:
-      - '27017:27017'   # remove exterior port
+      - '27017:27017'   #  TODO remove exterior port
     #    container_name: mongo
     #    restart: always
     volumes:
@@ -27,7 +27,7 @@ services:
     volumes:
       - ./cassandra_data:/var/lib/cassandra
   master:
-    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    image: andrelopes/rs-ingestion:0.1-SNAPSHOT
     #    container_name: master
     command: ["bash", "/wait-for-it.sh", "cassandra:9042", "--", "java", "-jar", "/app.jar" , '2551']
     #    restart: always
@@ -45,7 +45,7 @@ services:
       MONGO_IP_TCP_ADDR: mongo
 
   orchestrator:
-    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    image: andrelopes/rs-ingestion:0.1-SNAPSHOT
     #    container_name: orchestrator
     command: ["bash", "/wait-for-it.sh", "master:2551", "--",
               "bash", "/wait-for-it.sh", "mongo:27017", "--",
@@ -63,7 +63,7 @@ services:
       MONGO_IP_TCP_ADDR: mongo
 
   worker:
-    image: andrelopes/rs-engine:0.1-SNAPSHOT
+    image: andrelopes/rs-ingestion:0.1-SNAPSHOT
     #    container_name: worker
     command: ["bash", "/wait-for-it.sh", "master:2551", "--",
               "bash", "/wait-for-it.sh", "mongo:27017", "--",
@@ -85,15 +85,33 @@ services:
     volumes:
       - ./rs_data:/data
 
-  api:
-    image: andrelopes/rs-api:0.1-SNAPSHOT
-    #    container_name: worker
-    command: ["bash", "/wait-for-it.sh", "mongo:27017", "--",
-              "java", "-jar", "/app.jar"]
-    #    restart: always
-    depends_on:
-      - mongo
-    ports:
-      - '8080:8080'
-    environment:
-      MONGO_IP_TCP_ADDR: mongo
+#  ingestion-engine-api:
+#    image: andrelopes/rs-ingestion:0.1-SNAPSHOT
+#    #    container_name: ingestion-engine-api
+#    command: ["bash", "/wait-for-it.sh", "master:2551", "--",
+#              "bash", "/wait-for-it.sh", "mongo:27017", "--",
+#              "java", "-jar", "/app.jar" , '3001']
+#    #    restart: always
+#    ports:
+#      - '3001'
+#    depends_on:
+#      - master
+#    environment:
+#      PUBLISH_PORT: 3001
+#      PUBLISH_HOST: orchestrator
+#      SEED_PORT_TCP_ADDR: master
+#      CASSANDRA_IP_TCP_ADDR: cassandra
+#      MONGO_IP_TCP_ADDR: mongo
+
+#  api:
+#    image: andrelopes/rs-api:0.1-SNAPSHOT
+#    #    container_name: worker
+#    command: ["bash", "/wait-for-it.sh", "mongo:27017", "--",
+#              "java", "-jar", "/app.jar"]
+#    #    restart: always
+#    depends_on:
+#      - mongo
+#    ports:
+#      - '8080:8080'
+#    environment:
+#      MONGO_IP_TCP_ADDR: mongo

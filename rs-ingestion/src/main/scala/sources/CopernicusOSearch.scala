@@ -13,6 +13,8 @@ import sources.handlers.Parsing.processExtractions
 import utils.Utils._
 import sources.handlers.ErrorHandlers._
 
+import scala.util.{Failure, Success, Try}
+
 class CopernicusOSearchSource(config: Config,
                               override val program: String,
                               override val platform: String,
@@ -23,36 +25,39 @@ class CopernicusOSearchSource(config: Config,
   override val PROVIDER: String = "copernicus"
 
   val authConfigOpt = Some(AuthConfig(configName, config))
-  val epochInitialWork = new CopernicusOSearchWork(this, ingestionHistoryDates, isEpoch = true)
-  val periodicInitialWork = new CopernicusOSearchWork(this, initialIngestion)
+  val epochWork: CopernicusOSearchWork = generateWork(historyDates, isEpoch = true)
+  val periodicInitialWork: CopernicusOSearchWork = generateWork(initial)
+
+  override def generateWork(intervalDates: (DateTime, DateTime), isEpoch: Boolean): CopernicusOSearchWork = {
+    new CopernicusOSearchWork(this, intervalDates, isEpoch)
+  }
 
 }
 
 
 class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
-                            override val ingestionDates: (DateTime, DateTime),
+                            override val intervalDates: (DateTime, DateTime),
                             override val isEpoch: Boolean = false,
                             override val pageStart: Int = 0)
-  extends ProviderPeriodicRESTWork(source, ingestionDates, isEpoch, pageStart) {
+  extends ProviderPeriodicRESTWork(source, intervalDates, isEpoch, pageStart) {
 
   override val url: String = s"${source.baseUrl}start=$pageStart&rows=${source.pageSize}&" +
-    s"q=endposition:[${ingestionDates._1.toString(dateFormat)}%20TO%20${ingestionDates._2.toString(dateFormat)}]" +
+    s"q=endposition:[${intervalDates._1.toString(dateFormat)}%20TO%20${intervalDates._2.toString(dateFormat)}]" +
     s"%20AND%20producttype:${source.productType}"
 
-
-  def generatePeriodicWork(): CopernicusOSearchWork = {
-    val updatedIngestionWindow = source.adjustIngestionWindow(ingestionDates)
-    new CopernicusOSearchWork(source, updatedIngestionWindow)
-  }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
     val docJson = XML.toJSONObject(new String(responseBytes, StandardCharsets.UTF_8)).toString
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
-    (doc \ "feed" \ "entry").as[List[JsObject]].foreach(entry => workToBeDone :::= processEntry(entry))
+    val entriesOpt = Try((doc \ "feed" \ "entry").as[List[JsObject]])
+    entriesOpt match {
+      case Failure(_) => // there are no products in this time interval
+      case Success(entries) => entries.headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+    }
 
     saveFetchingLog(BsonDocument(docJson))
 
@@ -102,9 +107,14 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val linkNextPage = linksPages.filter(link => (link \ "rel").as[String] == "next")
 
     if (linkNextPage.nonEmpty)
-      Some(new CopernicusOSearchWork(source, ingestionDates, isEpoch, pageStart + source.pageSize))
+      Some(new CopernicusOSearchWork(source, intervalDates, isEpoch, pageStart + source.pageSize))
     else
       None
+  }
+
+  def generatePeriodicWork(): CopernicusOSearchWork = {
+    val updatedIngestionWindow = source.adjustWindow(intervalDates)
+    source.generateWork(updatedIngestionWindow)
   }
 
 }

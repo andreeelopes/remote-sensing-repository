@@ -17,13 +17,14 @@ object ManifestUtils {
 
       val fileUrl = transformURL(href)._1
 
-      val mongoSubDoc = BsonDocument(
-        "_id" -> BsonString(generateUUID()),
-        "status" -> BsonString("remote"),
-        "fileName" -> BsonString(fileName),
-        "url" -> BsonString(fileUrl),
-        "size" -> BsonInt64(size)
-      )
+      val mongoSubDoc =
+          BsonDocument(
+            "_id" -> BsonString(generateUUID()),
+            "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
+            "url" -> BsonString(fileUrl),
+            "size" -> BsonInt64(size)
+        )
 
       mongoSubDoc.append(manifestId, mongoSubDoc)
     }
@@ -49,12 +50,17 @@ object ManifestUtils {
           else if (splitId(3).startsWith("B1")) splitId(3).replace("B1", "1")
           else splitId(3)
 
+        val resolution = splitId(4).replace("m", "").toInt
+
         imageryDoc.add(
           BsonDocument(
             "_id" -> BsonString(generateUUID()),
             "band" -> BsonString(band),
             "tile" -> BsonString(splitId(5).replace("Tile", "")),
-            "resolution" -> BsonString(splitId(4)),
+            "resolution" -> BsonDocument(
+              "x" -> resolution,
+              "y" -> resolution,
+            ),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
             "fileName" -> BsonString(fileName),
@@ -62,13 +68,14 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc = BsonDocument(
-          "_id" -> BsonString(generateUUID()),
-          "status" -> BsonString("remote"),
-          "fileName" -> BsonString(fileName),
-          "url" -> BsonString(fileUrl),
-          "size" -> BsonInt64(size)
-        )
+        val updatedMongoSubDoc =
+            BsonDocument(
+              "_id" -> BsonString(generateUUID()),
+              "status" -> BsonString("remote"),
+              "fileName" -> BsonString(fileName),
+              "url" -> BsonString(fileUrl),
+              "size" -> BsonInt64(size)
+            )
         mongoSubDoc.append(manifestId, updatedMongoSubDoc)
       }
     }
@@ -90,14 +97,22 @@ object ManifestUtils {
 
       if (manifestId.startsWith("IMG_DATA")) {
         //  IMG_DATA_Band_10m_1_Tile1_Data -> [IMG, DATA, Band, 10m, 1, Tile1, Data]
-        val splitId = manifestId.split("_")
+        var splitId = manifestId.split("_").toList
+
+        if (manifestId.contains("TCI"))
+          splitId = List("", "", "", "10m", "TCI", splitId(4))
+
+        val resolution = splitId(3).replace("m", "").toInt
 
         imageryDoc.add(
           BsonDocument(
             "_id" -> BsonString(generateUUID()),
             "band" -> BsonString(splitId(4)),
             "tile" -> BsonString(splitId(5).replace("Tile", "")),
-            "resolution" -> BsonString(splitId(3)),
+            "resolution" -> BsonDocument(
+              "x" -> resolution,
+              "y" -> resolution,
+            ),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
             "fileName" -> BsonString(fileName),
@@ -105,13 +120,14 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc = BsonDocument(
-          "_id" -> BsonString(generateUUID()),
-          "status" -> BsonString("remote"),
-          "fileName" -> BsonString(fileName),
-          "url" -> BsonString(fileUrl),
-          "size" -> BsonInt64(size)
-        )
+        val updatedMongoSubDoc =
+          BsonDocument(
+            "_id" -> BsonString(generateUUID()),
+            "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
+            "url" -> BsonString(fileUrl),
+            "size" -> BsonInt64(size)
+          )
         mongoSubDoc.append(manifestId, updatedMongoSubDoc)
       }
     }
@@ -150,13 +166,14 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc = BsonDocument(
-          "_id" -> BsonString(generateUUID()),
-          "status" -> BsonString("remote"),
-          "fileName" -> BsonString(fileName),
-          "url" -> BsonString(fileUrl),
-          "size" -> BsonInt64(size)
-        )
+        val updatedMongoSubDoc =
+          BsonDocument(
+            "_id" -> BsonString(generateUUID()),
+            "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
+            "url" -> BsonString(fileUrl),
+            "size" -> BsonInt64(size)
+          )
         mongoSubDoc.append(manifestId, updatedMongoSubDoc)
       }
     }
@@ -184,6 +201,10 @@ object ManifestUtils {
           BsonDocument(
             "_id" -> BsonString(generateUUID()),
             "band" -> BsonString(splitId(0)),
+            "resolution" -> BsonDocument(
+              "x" -> 1200,
+              "y" -> 1200,
+            ),
             "fileName" -> BsonString(fileName),
             "url" -> BsonString(fileUrl),
             "status" -> BsonString("remote"),
@@ -191,13 +212,14 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc = BsonDocument(
-          "_id" -> BsonString(generateUUID()),
-          "status" -> BsonString("remote"),
-          "fileName" -> BsonString(fileName),
-          "url" -> BsonString(fileUrl),
-          "size" -> BsonInt64(size)
-        )
+        val updatedMongoSubDoc =
+          BsonDocument(
+            "_id" -> BsonString(generateUUID()),
+            "status" -> BsonString("remote"),
+            "fileName" -> BsonString(fileName),
+            "url" -> BsonString(fileUrl),
+            "size" -> BsonInt64(size)
+          )
         mongoSubDoc.append(manifestId, updatedMongoSubDoc)
       }
     }

@@ -3,89 +3,92 @@ package sources
 import akka.actor.ActorContext
 import akka.stream.ActorMaterializer
 import mongo.MongoDAO
-import org.bson.Document
-import org.mongodb.scala.MongoDatabase
-import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
 import play.api.libs.json._
+import play.api.libs.ws.{DefaultBodyReadables, DefaultWSCookie, WSAuthScheme}
+import play.api.libs.ws.ahc.{AhcCurlRequestLogger, StandaloneAhcWSClient}
+import play.libs.ws.WSCookie
 import sources.handlers.{AuthConfig, ErrorHandlers}
+import utils.AuthException
 import utils.HTTPClient.singleRequest
 import utils.Utils.writeFile
+import DefaultBodyReadables._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.JavaConverters._
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class FetchAndSaveSource(configName: String,
+                         val isEarthExplorer: Boolean = false,
+                         val productType: String,
+                         override val authConfigOpt: Option[AuthConfig] = None,
                          val errorHandler: (Int, Array[Byte], String, ActorMaterializer) => Unit = ErrorHandlers.defaultErrorHandler)
-  extends Source(configName) {
-  override val authConfigOpt: Option[AuthConfig] = Some(AuthConfig(configName, config))
-}
+  extends Source(configName)
 
 class FetchAndSaveWork(override val source: FetchAndSaveSource,
                        productId: String,
                        dataObjectId: String,
                        url: String,
-                       size: Long,
+                       timeout: FiniteDuration,
                        fileName: String) extends Work(source) {
 
-  workTimeout = (size / 1000000) + 20 seconds // 1MB/s
+  workTimeout = timeout
 
   override def execute()(implicit context: ActorContext, mat: ActorMaterializer): Unit = {
-    singleRequest(url, workTimeout, process, source.errorHandler, source.authConfigOpt)
+    if (!source.isEarthExplorer)
+      singleRequest(url, workTimeout, process, source.errorHandler, source.authConfigOpt)
+    else {
+      val wsClient = StandaloneAhcWSClient()
+
+
+      var wsClientUrl =
+        wsClient
+          .url(url)
+          .withFollowRedirects(true)
+          .withRequestFilter(AhcCurlRequestLogger())
+
+      val doc = MongoDAO.getDoc("cookies", MongoDAO.EARTH_EXPLORER_AUTH).get
+      val cookies = doc.getArray("cookies").getValues.asScala.map { c =>
+        (c.asDocument().get("name").asString().getValue, c.asDocument().get("value").asString().getValue)
+      }.toList
+
+      cookies.foreach { c => wsClientUrl = wsClientUrl.addCookies(DefaultWSCookie(c._1, c._2)) }
+
+      val wsClientAuth =
+        if (source.isEarthExplorer && source.productType != "MODIS_MYD13Q1_V6")
+          wsClientUrl.withAuth(source.authConfigOpt.get.username, source.authConfigOpt.get.password, WSAuthScheme.BASIC)
+        else if (source.productType == "MODIS_MYD13Q1_V6") {
+          val authConfig = Some(AuthConfig.apply("search-data-nasa", source.config))
+          wsClientUrl.withAuth(authConfig.get.username, authConfig.get.password, WSAuthScheme.BASIC)
+        }
+        else wsClientUrl
+
+      wsClientAuth
+        .get
+        .map { response =>
+          println(response.status)
+          println(response.headers)
+          process(response.body[Array[Byte]])
+        }.andThen { case _ => wsClient.close() }
+
+    }
   }
 
   override def process(responseBytes: Array[Byte]): List[Work] = {
+
     val dest = s"${source.baseDir}/$productId/$fileName"
 
-    MongoDAO.getDoc(productId).onComplete { doc =>
-      val docJson = Json.parse(doc.get.toJson)
-
-      var indicator = true
-
-      val imageryTransformer = __.read[JsArray].map {
-        case JsArray(values) =>
-          JsArray(values.map { e =>
-            val idOpt = (e \ "_id").asOpt[String]
-            if (idOpt.isDefined && idOpt.get == dataObjectId) {
-              (e.as[JsObject] ++ Json.obj("status" -> "local", "url" -> dest)).as[JsValue]
-            } else
-              e
-          })
-      }
-
-      val othersTransformer = __.read[JsValue].map { data =>
-        val dataMap = data.as[Map[String, JsValue]]
-
-        JsObject(dataMap.map { kv =>
-          val idOpt = (kv._2 \ "_id").asOpt[String]
-          if (idOpt.isDefined && idOpt.get == dataObjectId) {
-            indicator = false
-            val jsValue = (kv._2.as[JsObject] ++ Json.obj("status" -> "local", "url" -> dest)).as[JsValue]
-            (kv._1, jsValue)
-          } else kv
-        }).as[JsValue]
-      }
-
-      // update the "values" field in the original json
-      val jsonImageryTransformer = (__ \ 'imagery).json.update(imageryTransformer)
-      val jsonOthersTransformer = __.json.update(othersTransformer)
-
-      val data = (docJson \ "data").as[JsValue]
-      // carry out the transformation
-      val transformedImageryJson = data.transform(jsonImageryTransformer).asOpt
-      val transformedOthersJson = data.transform(jsonOthersTransformer).asOpt
-
-      val updatedDoc = if (indicator)
-        transformedImageryJson.get.as[JsValue]
-      else
-        transformedOthersJson.get.as[JsValue]
-
-      MongoDAO.addFieldToDoc(productId, "data", BsonDocument(updatedDoc.toString()))
-    }
-
-
+    //    if (source.isEarthExplorer && source.productType != "MODIS_MYD13Q1_V6") {
+    //      writeFile(dest, responseBytes)
+    //
+    //
+    //    } else
     writeFile(dest, responseBytes)
+
+
+    MongoDAO.updateProductData(productId, dataObjectId, Json.obj("status" -> "local", "url" -> dest), source.isEarthExplorer)
 
     List()
   }

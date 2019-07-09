@@ -5,14 +5,14 @@ import org.mongodb.scala._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import mongo.Helpers._
-import org.mongodb.scala.bson.{BsonDocument, BsonString, BsonValue}
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString, BsonValue}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.mongodb.scala.model.Projections._
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json, __}
 import sources.Extraction
 import utils.Utils
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
+import scala.util.Try
 
 object MongoDAO {
 
@@ -32,25 +32,26 @@ object MongoDAO {
 
   val FETCHING_LOG_COL = "fetchingLog"
   val PERIODIC_FETCHING_LOG_COL = "periodicFetchingLog"
-  val EARTH_EXPLORER_TOKENS = "eeTokens"
+  val EARTH_EXPLORER_AUTH = "eeAuth"
 
   val database: MongoDatabase = mongoClient.getDatabase(DB_NAME)
 
-  database.drop().results() // TODO remove
+  //  database.drop().results() // TODO remove
 
   private val collections = Map(
     PRODUCTS_COL -> database.getCollection(PRODUCTS_COL),
     FETCHING_LOG_COL -> database.getCollection(FETCHING_LOG_COL),
     PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL),
-    EARTH_EXPLORER_TOKENS -> database.getCollection(EARTH_EXPLORER_TOKENS),
+    EARTH_EXPLORER_AUTH -> database.getCollection(EARTH_EXPLORER_AUTH),
   )
 
-  insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_TOKENS)
+  insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_AUTH)
+  insertDoc(BsonDocument("_id" -> "cookies", "cookies" -> BsonArray()), EARTH_EXPLORER_AUTH)
 
   createIndexes()
 
 
-  def insertDoc(doc: Document, collectionName: String = PRODUCTS_COL): Unit = {
+  def insertDoc(doc: BsonDocument, collectionName: String = PRODUCTS_COL): Unit = {
     try {
       collections(collectionName).insertOne(doc).results()
     }
@@ -70,9 +71,15 @@ object MongoDAO {
       .results()
   }
 
-  def updateToken(docId: String, value: BsonValue): Unit = {
-    collections(EARTH_EXPLORER_TOKENS)
+  def updateToken(value: BsonValue): Unit = {
+    collections(EARTH_EXPLORER_AUTH)
       .updateMany(exists("token"), set("token", value))
+      .results()
+  }
+
+  def updateCookies(cookies: BsonArray): Unit = {
+    collections(EARTH_EXPLORER_AUTH)
+      .updateMany(exists("cookies"), set("cookies", cookies))
       .results()
   }
 
@@ -80,30 +87,76 @@ object MongoDAO {
     collections(collectionName).updateOne(equal("_id", docId), set(field, value)).results()
   }
 
-  def getDocField(docId: String, field: String, collectionName: String = PRODUCTS_COL): Future[Document] = {
-    collections(collectionName)
+  def getDoc(docId: String, collectionName: String = PRODUCTS_COL): Option[BsonDocument] = {
+    Try(collections(collectionName)
       .find(equal("_id", docId))
       .first
-      .toFuture()
+      .results()
+      .head
+      .toBsonDocument).toOption
   }
 
-  def getDoc(docId: String, collectionName: String = PRODUCTS_COL): Future[Document] = {
-    collections(collectionName)
-      .find(equal("_id", docId))
-      .projection(excludeId())
+  def getLastPeriodicLogByProductType(productType: String): Option[BsonDocument] = {
+    Try(collections(PERIODIC_FETCHING_LOG_COL)
+      .find(equal("query.productType", productType))
+      .sort(BsonDocument("query.endDate" -> -1))
       .first
-      .toFuture()
+      .results()
+      .head
+      .toBsonDocument).toOption
   }
 
-  //  private def getOrCreateCollection(collectionName: String, drop: Boolean = true) = {
-  //    collections.getOrElse(collectionName, {
-  //      val col = database.getCollection(collectionName)
-  //      if (drop) col.drop.results()
-  //      collections += (collectionName -> col)
-  //      col
-  //    })
-  //
-  //  }
+
+  def updateProductData(productId: String, dataObjectId: String, updatedValue: JsObject, fromEarthExplorer: Boolean = false): Unit = {
+    val doc = MongoDAO.getDoc(productId).get
+
+    val docJson = Json.parse(doc.toJson)
+
+    var indicator = true
+
+    val imageryTransformer = __.read[JsArray].map {
+      case JsArray(values) =>
+        JsArray(values.map { e =>
+          val idOpt = (e \ "_id").asOpt[String]
+          if (fromEarthExplorer) {
+            (e.as[JsObject] ++ updatedValue).as[JsValue]
+          } else if (idOpt.isDefined && idOpt.get == dataObjectId) {
+            (e.as[JsObject] ++ updatedValue).as[JsValue]
+          } else
+            e
+        })
+    }
+
+    val othersTransformer = __.read[JsValue].map { data =>
+      val dataMap = data.as[Map[String, JsValue]]
+
+      JsObject(dataMap.map { kv =>
+        val idOpt = (kv._2 \ "_id").asOpt[String]
+        if (idOpt.isDefined && idOpt.get == dataObjectId) {
+          indicator = false
+          val jsValue = (kv._2.as[JsObject] ++ updatedValue).as[JsValue]
+          (kv._1, jsValue)
+        } else kv
+      }).as[JsValue]
+    }
+
+    // update the "values" field in the original json
+    val jsonImageryTransformer = (__ \ 'imagery).json.update(imageryTransformer)
+    val jsonOthersTransformer = __.json.update(othersTransformer)
+
+    val data = (docJson \ "data").as[JsValue]
+    // carry out the transformation
+    val transformedImageryJson = data.transform(jsonImageryTransformer).asOpt
+    val transformedOthersJson = data.transform(jsonOthersTransformer).asOpt
+
+    val updatedDoc = if (indicator)
+      transformedImageryJson.get.as[JsValue]
+    else
+      transformedOthersJson.get.as[JsValue]
+
+    MongoDAO.addFieldToDoc(productId, "data", BsonDocument(updatedDoc.toString()))
+  }
+
 
   def createIndexes(): Unit = {
 
