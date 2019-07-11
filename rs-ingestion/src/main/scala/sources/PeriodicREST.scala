@@ -10,8 +10,9 @@ import utils.Utils.dateFormat
 
 
 abstract class PeriodicRESTSource(configName: String, config: Config) extends PeriodicSource(configName, config) {
-  val baseUrl: String = config.getString(s"sources.$configName.base-url")
-  val pageSize: Int = config.getInt(s"sources.$configName.page-size")
+
+  val baseUrl: String = (MongoDAO.sourcesJson \ configName \ "base-url").as[String]
+  val pageSize: Int = (MongoDAO.sourcesJson \ configName \ "page-size").as[Int]
 }
 
 abstract class PeriodicRESTWork(override val source: PeriodicRESTSource,

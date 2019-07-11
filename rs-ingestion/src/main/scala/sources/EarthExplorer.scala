@@ -47,7 +47,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
   val url = s"""${source.baseUrl}search?jsonRequest={"apiKey":"<token>","datasetName":"${source.productType}","temporalFilter":{"startDate":"${intervalDates._1.toString(dateFormat)}","endDate":"${intervalDates._2.toString(dateFormat)}"},"includeUnknownCloudCover":true,"maxResults":"${source.pageSize}","startingNumber":"$pageStart","sortOrder":"DESC"}"""
 
   private def getToken: String = {
-    val doc = MongoDAO.getDoc("token", MongoDAO.EARTH_EXPLORER_AUTH).get
+    val doc = MongoDAO.getDoc("token", MongoDAO.EARTH_EXPLORER_AUTH_COL).get
     doc.getString("token").getValue
   }
 

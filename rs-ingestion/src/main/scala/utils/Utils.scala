@@ -1,12 +1,11 @@
 package utils
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, PrintWriter}
-import java.util
 import java.util.UUID
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigFactory}
 import mongo.MongoDAO
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import sources.Extraction
 
 import scala.collection.JavaConverters._
@@ -46,45 +45,57 @@ object Utils {
 
   def getExtractions(configName: String, collection: String): List[Extraction] = {
 
-    config.getConfigList(s"sources.$configName.extractions").asScala.toList.map { entry =>
+    val sourcesJson = Json.parse(MongoDAO.getDoc("sources", MongoDAO.SOURCES_COL).get.toJson)
+
+    val pathElems = List("sources") ::: configName.split("\\.").toList ::: List("extractions")
+
+    val extractions =
+      pathElems
+        .foldLeft(sourcesJson)((js, elem) => (js \ elem).as[JsValue])
+        .as[JsArray].value.toList
+
+
+    extractions.map { entry =>
       Extraction(
-        entry.getString("name"),
-        entry.getString("query-type"),
-        entry.getString("result-type"),
-        Try(entry.getString("result-type-transformation")).getOrElse(entry.getString("result-type")),
-        entry.getString("query"),
-        entry.getString("context"),
-        Try(entry.getString("dest-path")).getOrElse(""),
-        entry.getString("context-format"),
-        entry.getString("metamodel-mapping"),
+        (entry \ "name").as[String],
+        (entry \ "query-type").as[String],
+        (entry \ "result-type").as[String],
+        Try((entry \ "result-type-transformation").as[String]).getOrElse((entry \ "result-type").as[String]),
+        (entry \ "query").as[String],
+        (entry \ "context").as[String],
+        Try((entry \ "dest-path").as[String]).getOrElse(""),
+        (entry \ "context-format").as[String],
+        (entry \ "metamodel-mapping").as[String],
         collection,
-        Try(entry.getString("date-format")).getOrElse(null),
-        Try(entry.getBoolean("update-url")).getOrElse(false),
+        Try((entry \ "date-format").as[String]).getOrElse(null),
+        Try((entry \ "update-url").as[Boolean]).getOrElse(false),
       )
     }
   }
 
 
-  def getIndexesConf(configName: String): util.List[Index] = {
-    config.getConfigList(configName).asScala.toList.map {
-      entry =>
-        Index(
-          entry.getString("type"),
-          entry.getString("order"),
-          entry.getStringList("fields-names").asScala.toList
-        )
-    }.asJava
+  def extractIndexes(indexesJson: JsArray): List[Index] = {
+
+    indexesJson.value.toList.map { entry =>
+      Index(
+        (entry \ "type").as[String],
+        (entry \ "order").as[String],
+        (entry \ "fields-names").as[JsArray].value.map(fn => fn.as[String]).toList,
+      )
+    }
   }
 
 
   case class Index(indexType: String, order: String, fields: List[String])
 
   def productsToFetch(configName: String): List[ProductEntry] = {
-    config.getConfigList(s"sources.$configName.products").asScala.toList.map { entry =>
+    val productsArray = (MongoDAO.sourcesJson \ configName \ "products").as[JsArray].value.toList
+
+    productsArray.map { entry =>
       ProductEntry(
-        entry.getString("program"),
-        entry.getString("platform"),
-        entry.getStringList("product-type").asScala.toList
+        (entry \ "program").as[String],
+        (entry \ "platform").as[String],
+        (entry \ "product-type").as[List[String]]
       )
     }
   }
@@ -94,13 +105,12 @@ object Utils {
 
 
   def sourceConcurrencyLimits(): Map[String, Int] = {
-    val sourcesConfig = config.getObject("sources")
+    val sourcesJson = MongoDAO.sourcesJson.as[JsObject].value.toList
+
     var concurrencyLimits: Map[String, Int] = Map()
 
-    sourcesConfig.asScala.foreach { case (k, _) =>
-      val sourceConfig = config.getConfig(s"sources.$k")
-      val limit = Try(sourceConfig.getInt("concurrency-limit")).getOrElse(Int.MaxValue)
-
+    sourcesJson.foreach { case (k, json) =>
+      val limit = Try((json \ "concurrency-limit").as[Int]).getOrElse(Int.MaxValue)
       concurrencyLimits += (k -> limit)
     }
 

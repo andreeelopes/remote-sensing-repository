@@ -5,8 +5,9 @@ import java.util.concurrent.CountDownLatch
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.persistence.cassandra.testkit.CassandraLauncher
-import api.{Services, ServerStart}
+import api.{ServerStart, Services}
 import com.typesafe.config.{Config, ConfigFactory}
+import mongo.MongoDAO
 import protocol.master.MasterSingleton
 import protocol.scheduler.Orchestrator
 import protocol.worker.Worker
@@ -17,16 +18,15 @@ object Main {
   // note that 2551 and 2552 are expected to be seed nodes though, even if
   // the master starts at 2000
 
-  val masterPortRange = 2000 to 2999
+  val masterPortRange: Range.Inclusive = 2000 to 2999
 
-  val orchestratorPortRange = 3000 to 3999
+  val orchestratorPortRange: Range.Inclusive = 3000 to 3999
 
-  val apiActorPortRange = 6000 to 6999
+  val apiActorPortRange: Range.Inclusive = 6000 to 6999
 
   def main(args: Array[String]): Unit = {
-    val baseDir = ConfigFactory.load().getString("clustering.base-dir")
-
-    new File(baseDir).mkdirs
+    new File("./data").mkdirs
+    MongoDAO.setup(true)
 
     args.headOption match {
 

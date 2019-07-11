@@ -22,13 +22,13 @@ import scala.util.{Failure, Success, Try}
 
 
 class CopernicusManifestSource(config: Config, val program: String, val platform: String, val productType: String)
-  extends sources.Source("copernicus-oah-odata", config) with AuthComponent {
+  extends Source("copernicus-oah-odata", config) with AuthComponent {
 
   override val configName = "copernicus-oah-odata"
 
   override val authConfigOpt = Some(AuthConfig(configName, config))
 
-  val baseUrl: String = config.getString(s"sources.$configName.base-url")
+  val baseUrl: String = (MongoDAO.sourcesJson \ configName \ "base-url").as[String]
 
   val extractions: List[Extraction] = getAllExtractions(configName, program, platform.toLowerCase, productType)
 
@@ -137,7 +137,7 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
 
     Json.parse(result)
       .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, "", null, false))
+      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, "", null, updateUrl = false))
 
   }
 

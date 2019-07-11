@@ -49,7 +49,7 @@ class FetchAndSaveWork(override val source: FetchAndSaveSource,
           .withFollowRedirects(true)
           .withRequestFilter(AhcCurlRequestLogger())
 
-      val doc = MongoDAO.getDoc("cookies", MongoDAO.EARTH_EXPLORER_AUTH).get
+      val doc = MongoDAO.getDoc("cookies", MongoDAO.EARTH_EXPLORER_AUTH_COL).get
       val cookies = doc.getArray("cookies").getValues.asScala.map { c =>
         (c.asDocument().get("name").asString().getValue, c.asDocument().get("value").asString().getValue)
       }.toList
@@ -60,7 +60,7 @@ class FetchAndSaveWork(override val source: FetchAndSaveSource,
         if (source.isEarthExplorer && source.productType != "MODIS_MYD13Q1_V6")
           wsClientUrl.withAuth(source.authConfigOpt.get.username, source.authConfigOpt.get.password, WSAuthScheme.BASIC)
         else if (source.productType == "MODIS_MYD13Q1_V6") {
-          val authConfig = Some(AuthConfig.apply("search-data-nasa", source.config))
+          val authConfig = Some(AuthConfig("search-data-nasa", source.config))
           wsClientUrl.withAuth(authConfig.get.username, authConfig.get.password, WSAuthScheme.BASIC)
         }
         else wsClientUrl

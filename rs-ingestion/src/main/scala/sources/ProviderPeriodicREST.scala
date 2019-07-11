@@ -32,7 +32,7 @@ abstract class ProviderPeriodicRESTSource(configName: String, config: Config,
 
     if (doc.isEmpty) {
       context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(epochWork))
-      context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork))
+//      context.system.scheduler.scheduleOnce(startDelay, context.self, ProduceWork(periodicInitialWork)) TODO
     } else {
       val endDate = new DateTime(doc.get.getDocument("query").getDateTime("endDate").getValue)
 
@@ -73,11 +73,13 @@ abstract class ProviderPeriodicRESTWork(override val source: ProviderPeriodicRES
   def setupEntryMongo(productId: String): Unit = {
     MongoDAO.insertDoc(
       BsonDocument(
-        "_id" -> productId,
-        "program" -> source.program,
-        "platform" -> source.platform,
-        "productType" -> source.productType,
-        "provider" -> source.PROVIDER
+        "_id" -> BsonString(productId),
+        "program" -> BsonString(source.program),
+        "platform" -> BsonString(source.platform),
+        "productType" -> BsonString(source.productType),
+        "provider" -> BsonString(source.PROVIDER),
+        "ingestionDate" -> BsonDateTime(new DateTime().toDate),
+        "custom" -> BsonDocument()
       )
     )
   }

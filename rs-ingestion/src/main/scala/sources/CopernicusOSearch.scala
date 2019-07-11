@@ -86,20 +86,20 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
   }
 
-  private def generateCreodiasWork(productId: String, title: String) = {
-    val creodiasConfigName = "creodias-odata"
-    val creodiasBaseUrl = source.config.getString(s"sources.$creodiasConfigName.base-url")
-    val creodiasUrl = s"$creodiasBaseUrl/${source.platform.capitalize}/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
-
-    val creodiasExt =
-      getAllExtractions(creodiasConfigName, source.program, source.platform, source.productType)
-
-    if (creodiasExt.nonEmpty)
-      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
-        creodiasUrl, productId))
-    else
-      List()
-  }
+//  private def generateCreodiasWork(productId: String, title: String) = {
+  //    val creodiasConfigName = "creodias-odata"
+  //    val creodiasBaseUrl = source.config.getString(s"sources.$creodiasConfigName.base-url")
+  //    val creodiasUrl = s"$creodiasBaseUrl/${source.platform.capitalize}/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
+  //
+  //    val creodiasExt =
+  //      getAllExtractions(creodiasConfigName, source.program, source.platform, source.productType)
+  //
+  //    if (creodiasExt.nonEmpty)
+  //      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
+  //        creodiasUrl, productId))
+  //    else
+  //      List()
+  //  }
 
 
   override def getNextPagesWork(doc: JsValue): Option[Work] = {

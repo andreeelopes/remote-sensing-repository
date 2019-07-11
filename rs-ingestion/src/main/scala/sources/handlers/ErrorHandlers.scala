@@ -49,8 +49,8 @@ object ErrorHandlers {
 
             implicit val mat: ActorMaterializer = materializer
 
-            val username = conf.getString("sources.earth-explorer.credentials.username")
-            val password = conf.getString("sources.earth-explorer.credentials.pwd")
+            val username = (MongoDAO.sourcesJson \ "earth-explorer" \ "credentials" \ "username").as[String]
+            val password = (MongoDAO.sourcesJson \ "earth-explorer" \ "credentials" \ "pwd").as[String]
 
             val newTokenUrl = "https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/login?jsonRequest=" +
               s"""{"username":"$username","password":"$password","catalogId":"EE"}"""

@@ -1,5 +1,6 @@
 import java.nio.charset.StandardCharsets
 
+import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
 import org.json.XML
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.geojson.GeoJsonWriter
@@ -29,11 +30,13 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 //////import org.mongodb.scala.model._
 ////
 //object Test extends App {
+//  val config = ConfigFactory.load(); // read Config here
 //
-//
+//  val configJSON = config.getString("sources")
+//  println(Json.parse(configJSON) \ "copernicus-oah-opensearch")
 //
 //}
-//
+
 
 //  val mongoClient: MongoClient = MongoClient()
 //  Thread.sleep(1000)

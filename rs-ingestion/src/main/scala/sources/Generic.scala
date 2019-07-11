@@ -1,8 +1,12 @@
 package sources
 
+import java.time
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorContext
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import mongo.MongoDAO
 import org.joda.time.DateTime
 import sources.handlers.AuthConfig
 import utils.Utils
@@ -12,8 +16,6 @@ import scala.util.Try
 
 
 abstract class Source(val configName: String, val config: Config = ConfigFactory.load()) extends Serializable {
-
-  val description: String = Try{config.getString(s"sources.$configName.description")}.getOrElse("no description")
 
   val baseDir: String = config.getString("clustering.base-dir")
 
@@ -25,10 +27,14 @@ abstract class Work(val source: Source) extends Serializable {
 
   val workId: String = Utils.generateUUID()
 
-  var workTimeout: FiniteDuration =
-    Try(source.config.getDuration(s"sources.${source.configName}.work-timeout").getSeconds.seconds).getOrElse {
-      source.config.getDuration(s"distributed-workers.work-timeout").getSeconds.seconds
-    }
+  private val sourceWorkTimeoutOpt =
+    Try(
+      Duration((MongoDAO.sourcesJson \ source.configName \ "work-timeout").as[Long], TimeUnit.SECONDS).toSeconds.seconds
+    ).toOption
+
+  var workTimeout: FiniteDuration = sourceWorkTimeoutOpt.getOrElse {
+    source.config.getDuration(s"distributed-workers.work-timeout").getSeconds.seconds
+  }
 
   var backOffTimeout = new DateTime()
   var backOffInterval: Double = 0 // seconds

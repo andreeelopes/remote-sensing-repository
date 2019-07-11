@@ -27,7 +27,8 @@ object EarthExplorerUtils {
   def getDataDoc(productType: String, productId: String, entityId: String): BsonDocument = {
 
     val productBands = bands(productType)
-    val datasetNumber = config.getInt(s"sources.earth-explorer.$productType.datasetNumber")
+    val datasetNumber = (MongoDAO.sourcesJson \ "earth-explorer" \ productType \ "datasetNumber").as[Long]
+
     val url = s"https://earthexplorer.usgs.gov/download/$datasetNumber/$entityId/STANDARD/EE"
 
     BsonDocument("imagery" ->

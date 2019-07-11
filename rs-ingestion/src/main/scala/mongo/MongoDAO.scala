@@ -12,7 +12,7 @@ import sources.Extraction
 import utils.Utils
 
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object MongoDAO {
 
@@ -24,7 +24,7 @@ object MongoDAO {
   }
 
   val mongoClient: MongoClient = MongoClient(uri)
-  Thread.sleep(1000)
+  Thread.sleep(500)
 
   val DB_NAME = "rsDB"
 
@@ -32,23 +32,57 @@ object MongoDAO {
 
   val FETCHING_LOG_COL = "fetchingLog"
   val PERIODIC_FETCHING_LOG_COL = "periodicFetchingLog"
-  val EARTH_EXPLORER_AUTH = "eeAuth"
+  val EARTH_EXPLORER_AUTH_COL = "eeAuth"
+  val SOURCES_COL = "sources"
+  val INDEXES_COL = "indexes"
+  val SCHEMA_COL = "schema"
 
   val database: MongoDatabase = mongoClient.getDatabase(DB_NAME)
 
-  //  database.drop().results() // TODO remove
+  private val collections =
+    Map(
+      PRODUCTS_COL -> database.getCollection(PRODUCTS_COL),
+      FETCHING_LOG_COL -> database.getCollection(FETCHING_LOG_COL),
+      PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL),
+      EARTH_EXPLORER_AUTH_COL -> database.getCollection(EARTH_EXPLORER_AUTH_COL),
+      SOURCES_COL -> database.getCollection(SOURCES_COL),
+      INDEXES_COL -> database.getCollection(INDEXES_COL),
+      SCHEMA_COL -> database.getCollection(SCHEMA_COL),
+    )
 
-  private val collections = Map(
-    PRODUCTS_COL -> database.getCollection(PRODUCTS_COL),
-    FETCHING_LOG_COL -> database.getCollection(FETCHING_LOG_COL),
-    PERIODIC_FETCHING_LOG_COL -> database.getCollection(PERIODIC_FETCHING_LOG_COL),
-    EARTH_EXPLORER_AUTH -> database.getCollection(EARTH_EXPLORER_AUTH),
-  )
+  var sourcesJson: JsValue = Json.parse(config.getString("sources"))
+  var indexesJson: JsArray = (Json.parse(config.getString("indexing")) \ "indexes").as[JsArray]
 
-  insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_AUTH)
-  insertDoc(BsonDocument("_id" -> "cookies", "cookies" -> BsonArray()), EARTH_EXPLORER_AUTH)
+  def setup(clean: Boolean = false): Unit = {
+    if (clean)
+      database.drop().results()
 
-  createIndexes()
+    insertDoc(BsonDocument("_id" -> "token", "token" -> "NA"), EARTH_EXPLORER_AUTH_COL)
+    insertDoc(BsonDocument("_id" -> "cookies", "cookies" -> BsonArray()), EARTH_EXPLORER_AUTH_COL)
+
+    val sourcesDoc = getDoc("sources", SOURCES_COL)
+    if (sourcesDoc.isEmpty) {
+      insertDoc(BsonDocument("_id" -> "sources", "sources" -> BsonDocument(config.getString("sources"))), SOURCES_COL)
+      sourcesJson = Json.parse(config.getString("sources"))
+    }
+
+    val schemaDoc = getDoc("schema", SCHEMA_COL)
+    if (schemaDoc.isEmpty) {
+      val products = config.getConfig("schema").root().unwrapped().asScala.toList
+      products.foreach { p =>
+        insertDoc(BsonDocument("_id" -> p._1, "schema" -> BsonDocument(config.getString(s"schema.${p._1}"))), SCHEMA_COL)
+      }
+    }
+
+
+    val indexesDoc = getDoc("indexing", INDEXES_COL)
+    if (indexesDoc.isEmpty) {
+      insertDoc(BsonDocument("_id" -> "indexing", "indexing" -> BsonDocument(config.getString("indexing"))), INDEXES_COL)
+      indexesJson = (Json.parse(config.getString("indexing")) \ "indexes").as[JsArray]
+      createIndexes(indexesJson)
+    }
+
+  }
 
 
   def insertDoc(doc: BsonDocument, collectionName: String = PRODUCTS_COL): Unit = {
@@ -72,13 +106,13 @@ object MongoDAO {
   }
 
   def updateToken(value: BsonValue): Unit = {
-    collections(EARTH_EXPLORER_AUTH)
+    collections(EARTH_EXPLORER_AUTH_COL)
       .updateMany(exists("token"), set("token", value))
       .results()
   }
 
   def updateCookies(cookies: BsonArray): Unit = {
-    collections(EARTH_EXPLORER_AUTH)
+    collections(EARTH_EXPLORER_AUTH_COL)
       .updateMany(exists("cookies"), set("cookies", cookies))
       .results()
   }
@@ -158,11 +192,11 @@ object MongoDAO {
   }
 
 
-  def createIndexes(): Unit = {
+  def createIndexes(indexesJson: JsArray): Unit = {
 
-    val indexes = Utils.getIndexesConf("indexing.indexes")
+    val indexes = Utils.extractIndexes(indexesJson)
 
-    indexes.asScala.foreach { index =>
+    indexes.foreach { index =>
       index.indexType match {
         case "full" =>
           index.order match {
