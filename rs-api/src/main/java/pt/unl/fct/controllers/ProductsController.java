@@ -17,6 +17,7 @@ import pt.unl.fct.services.ProductService;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class ProductsController implements ProductsApi {
@@ -47,6 +48,11 @@ public class ProductsController implements ProductsApi {
     @Override
     public void deleteProductData(Long productId, Long dataID) {
 
+    }
+
+    @Override
+    public List<Object> getSchema() {
+        return productService.getSchema();
     }
 
     @Override

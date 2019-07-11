@@ -11,8 +11,11 @@ import pt.unl.fct.model.Product;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 
 public interface ProductsApi {
+
+
     @ApiOperation(value = "Get the list of products based on the query", nickname = "getProducts", notes = "", response = Product.class, responseContainer = "List", tags = {"products-controller",})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful operation", response = Product.class, responseContainer = "List"),
@@ -81,4 +84,11 @@ public interface ProductsApi {
                            @ApiParam(value = "ID of the data to be deleted", required = true) @PathVariable("dataId") Long dataID);
 
 
+    @ApiOperation(value = "Get the metamodel of each one of the products", nickname = "getSchema", notes = "Returns an array of json schemas describing the metamodel", response = List.class, tags = {"products-controller",})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful operation", response = Object.class),})
+    @RequestMapping(value = "/schema",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    List<Object> getSchema();
 }

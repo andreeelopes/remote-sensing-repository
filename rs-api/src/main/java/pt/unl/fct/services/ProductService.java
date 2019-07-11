@@ -26,6 +26,7 @@ import java.util.List;
 public class ProductService {
 
     private static final String PRODUCTS_MD_COL = "productsMD";
+    private static final String SCHEMA_COL = "schema";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -59,4 +60,7 @@ public class ProductService {
     }
 
 
+    public List<Object> getSchema() {
+        return mongoTemplate.findAll(Object.class, SCHEMA_COL);
+    }
 }
