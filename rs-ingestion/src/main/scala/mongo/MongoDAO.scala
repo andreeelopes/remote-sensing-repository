@@ -146,47 +146,42 @@ object MongoDAO {
 
     val docJson = Json.parse(doc.toJson)
 
-    var indicator = true
+    var isImagery = true
 
-    val imageryTransformer = __.read[JsArray].map {
+    val transformer = __.read[JsArray].map {
       case JsArray(values) =>
-        JsArray(values.map { e =>
+
+        val existsId = values.exists { e =>
           val idOpt = (e \ "_id").asOpt[String]
-          if (fromEarthExplorer) {
-            (e.as[JsObject] ++ updatedValue).as[JsValue]
-          } else if (idOpt.isDefined && idOpt.get == dataObjectId) {
-            (e.as[JsObject] ++ updatedValue).as[JsValue]
-          } else
-            e
-        })
-    }
+          idOpt.isDefined && idOpt.get == dataObjectId
+        }
 
-    val othersTransformer = __.read[JsValue].map { data =>
-      val dataMap = data.as[Map[String, JsValue]]
+        if (existsId) {
+          JsArray(values.map { e =>
+            val idOpt = (e \ "_id").asOpt[String]
+            if (fromEarthExplorer || (idOpt.isDefined && idOpt.get == dataObjectId)) {
+              (e.as[JsObject] ++ updatedValue).as[JsValue]
+            } else e
+          })
+        }
+        else {
+          isImagery = false
+          JsArray(values)
+        }
 
-      JsObject(dataMap.map { kv =>
-        val idOpt = (kv._2 \ "_id").asOpt[String]
-        if (idOpt.isDefined && idOpt.get == dataObjectId) {
-          indicator = false
-          val jsValue = (kv._2.as[JsObject] ++ updatedValue).as[JsValue]
-          (kv._1, jsValue)
-        } else kv
-      }).as[JsValue]
     }
 
     // update the "values" field in the original json
-    val jsonImageryTransformer = (__ \ 'imagery).json.update(imageryTransformer)
-    val jsonOthersTransformer = __.json.update(othersTransformer)
+    val jsonImageryTransformer = (__ \ 'imagery).json.update(transformer)
+    val jsonNonImageryTransformer = (__ \ 'metadata).json.update(transformer)
 
     val data = (docJson \ "data").as[JsValue]
     // carry out the transformation
-    val transformedImageryJson = data.transform(jsonImageryTransformer).asOpt
-    val transformedOthersJson = data.transform(jsonOthersTransformer).asOpt
+    val transformedImageryJson = data.transform(jsonImageryTransformer)
+    val transformedNonImageryJson = data.transform(jsonNonImageryTransformer)
 
-    val updatedDoc = if (indicator)
-      transformedImageryJson.get.as[JsValue]
-    else
-      transformedOthersJson.get.as[JsValue]
+    val updatedDoc =
+      if (isImagery) transformedImageryJson.get.as[JsValue] else transformedNonImageryJson.get.as[JsValue]
 
     MongoDAO.addFieldToDoc(productId, "data", BsonDocument(updatedDoc.toString()))
   }

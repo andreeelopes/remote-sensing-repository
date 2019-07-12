@@ -17,6 +17,7 @@ trait KryoSerializable
 
 object Utils {
 
+
   val dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
   val config: Config = ConfigFactory.load()
@@ -115,6 +116,32 @@ object Utils {
     }
 
     concurrencyLimits
+  }
+
+  def getBandsEE: Map[String, List[(String, Int, Int)]] = {
+    val sourcesJson = MongoDAO.sourcesJson.as[JsValue]
+
+    var bands = Map[String, List[(String, Int, Int)]]()
+
+    val sourceProducts = (sourcesJson \ "earth-explorer").as[JsObject].value.toList
+
+    sourceProducts.foreach { p =>
+      val bandsProductOpt = Try((p._2 \ "bands").as[JsArray]).toOption
+
+      if (bandsProductOpt.isDefined) {
+        val bandsProduct = bandsProductOpt.get
+        var bandsList = List[(String, Int, Int)]()
+
+        bandsProduct.value.foreach { b =>
+          val name = (b \ "name").as[String]
+          val resolutionX = (b \ "resolution" \ "y").as[Int]
+          val resolutionY = (b \ "resolution" \ "y").as[Int]
+          bandsList ::= (name, resolutionX, resolutionY)
+        }
+        bands += (p._1 -> bandsList)
+      }
+    }
+    bands
   }
 
 }

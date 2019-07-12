@@ -70,10 +70,11 @@ class Services extends Actor with ActorLogging {
 
         val nonImageryDataOpt =
           Try {
-            data.filter { kv =>
-              val idOpt = kv._2 \ "_id"
-              idOpt.isDefined && idOpt.get.as[String] == dataObjectId
-            }.head._2
+            data("metadata").as[JsArray].value
+              .filter { dataObject =>
+                val idOpt = dataObject \ "_id"
+                idOpt.isDefined && idOpt.get.as[String] == dataObjectId
+              }.head
           }.toOption
 
         val imageryDataOpt =
@@ -102,8 +103,8 @@ class Services extends Actor with ActorLogging {
             val size = Try((dataObject \ "size").as[Long]).toOption.getOrElse[Long](111111111)
 
             val workTimeout = (size / 1000000) + 20 seconds // ~1MB/s
-            val configName = if (provider == "copernicus") "copernicus-oah-data" else "earth-explorer-download-api"
-            val sourceName = if (provider == "copernicus") "copernicus-oah-data" else "earth-explorer"
+            val configName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer-download-api"
+            val sourceName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer"
 
             val work: Work = new FetchAndSaveWork(
               new FetchAndSaveSource(configName, provider == "earth-explorer", productType, Some(AuthConfig(sourceName, config))),

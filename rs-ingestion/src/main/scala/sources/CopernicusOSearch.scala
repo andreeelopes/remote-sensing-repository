@@ -11,7 +11,6 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import sources.handlers.AuthConfig
 import sources.handlers.Parsing.processExtractions
 import utils.Utils._
-import sources.handlers.ErrorHandlers._
 
 import scala.util.{Failure, Success, Try}
 
@@ -77,7 +76,6 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
     processExtractions(node.toString.getBytes(StandardCharsets.UTF_8), auxExt, productId, url)
 
-    //    generateCreodiasWork(productId, title) ::: TODO
     List(new CopernicusManifestWork(
       new CopernicusManifestSource(source.config, source.program, source.platform, source.productType),
       productId,
@@ -86,20 +84,6 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
 
   }
 
-//  private def generateCreodiasWork(productId: String, title: String) = {
-  //    val creodiasConfigName = "creodias-odata"
-  //    val creodiasBaseUrl = source.config.getString(s"sources.$creodiasConfigName.base-url")
-  //    val creodiasUrl = s"$creodiasBaseUrl/${source.platform.capitalize}/search.json?maxRecords=1&productIdentifier=%$title%&status=all"
-  //
-  //    val creodiasExt =
-  //      getAllExtractions(creodiasConfigName, source.program, source.platform, source.productType)
-  //
-  //    if (creodiasExt.nonEmpty)
-  //      List(new ExtractionWork(new ExtractionSource(source.config, creodiasConfigName, creodiasExt, creodiasErrorHandler),
-  //        creodiasUrl, productId))
-  //    else
-  //      List()
-  //  }
 
 
   override def getNextPagesWork(doc: JsValue): Option[Work] = {

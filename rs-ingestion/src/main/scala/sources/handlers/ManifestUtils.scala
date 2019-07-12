@@ -7,7 +7,8 @@ import utils.Utils.generateUUID
 object ManifestUtils {
 
   def processObjectsGeneric(dataObjects: List[JsValue], transformURL: String => (String, String)): BsonDocument = {
-    var mongoSubDoc = BsonDocument()
+    val mongoSubDoc = BsonDocument()
+    val nonImageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
@@ -18,22 +19,25 @@ object ManifestUtils {
       val fileUrl = transformURL(href)._1
 
       val mongoSubDoc =
-          BsonDocument(
-            "_id" -> BsonString(generateUUID()),
-            "status" -> BsonString("remote"),
-            "fileName" -> BsonString(fileName),
-            "url" -> BsonString(fileUrl),
-            "size" -> BsonInt64(size)
+        BsonDocument(
+          "_id" -> BsonString(manifestId),
+          "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
+          "url" -> BsonString(fileUrl),
+          "size" -> BsonInt64(size)
         )
 
-      mongoSubDoc.append(manifestId, mongoSubDoc)
+      nonImageryDoc.add(mongoSubDoc)
     }
+
+    mongoSubDoc.append("metadata", nonImageryDoc)
     mongoSubDoc
   }
 
   def processObjectsS2MSI2A(dataObjects: List[JsValue], transformURL: String => (String, String)): BsonDocument = {
-    var mongoSubDoc = BsonDocument()
-    var imageryDoc = BsonArray()
+    val mongoSubDoc = BsonDocument()
+    val imageryDoc = BsonArray()
+    val nonImageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
@@ -68,25 +72,25 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc =
-            BsonDocument(
-              "_id" -> BsonString(generateUUID()),
-              "status" -> BsonString("remote"),
-              "fileName" -> BsonString(fileName),
-              "url" -> BsonString(fileUrl),
-              "size" -> BsonInt64(size)
-            )
-        mongoSubDoc.append(manifestId, updatedMongoSubDoc)
+        nonImageryDoc.add(BsonDocument(
+          "_id" -> BsonString(manifestId),
+          "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
+          "url" -> BsonString(fileUrl),
+          "size" -> BsonInt64(size))
+        )
       }
     }
 
     mongoSubDoc.append("imagery", imageryDoc)
+    mongoSubDoc.append("metadata", nonImageryDoc)
     mongoSubDoc
   }
 
   def processObjectsS2MSI1C(dataObjects: List[JsValue], transformURL: String => (String, String)): BsonDocument = {
-    var mongoSubDoc = BsonDocument()
-    var imageryDoc = BsonArray()
+    val mongoSubDoc = BsonDocument()
+    val imageryDoc = BsonArray()
+    val nonImageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
@@ -120,25 +124,25 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc =
-          BsonDocument(
-            "_id" -> BsonString(generateUUID()),
-            "status" -> BsonString("remote"),
-            "fileName" -> BsonString(fileName),
-            "url" -> BsonString(fileUrl),
-            "size" -> BsonInt64(size)
-          )
-        mongoSubDoc.append(manifestId, updatedMongoSubDoc)
+        nonImageryDoc.add(BsonDocument(
+          "_id" -> BsonString(manifestId),
+          "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
+          "url" -> BsonString(fileUrl),
+          "size" -> BsonInt64(size)
+        ))
       }
     }
 
     mongoSubDoc.append("imagery", imageryDoc)
+    mongoSubDoc.append("metadata", nonImageryDoc)
     mongoSubDoc
   }
 
   def processObjectsSentinel1(dataObjects: List[JsValue], transformURL: String => (String, String)): BsonDocument = {
-    var mongoSubDoc = BsonDocument()
-    var imageryDoc = BsonArray()
+    val mongoSubDoc = BsonDocument()
+    val imageryDoc = BsonArray()
+    val nonImageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
@@ -166,25 +170,27 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc =
+        nonImageryDoc.add(
           BsonDocument(
-            "_id" -> BsonString(generateUUID()),
+            "_id" -> BsonString(manifestId),
             "status" -> BsonString("remote"),
             "fileName" -> BsonString(fileName),
             "url" -> BsonString(fileUrl),
             "size" -> BsonInt64(size)
           )
-        mongoSubDoc.append(manifestId, updatedMongoSubDoc)
+        )
       }
     }
 
     mongoSubDoc.append("imagery", imageryDoc)
+    mongoSubDoc.append("metadata", nonImageryDoc)
     mongoSubDoc
   }
 
   def processObjectsOL_1_ERR___(dataObjects: List[JsValue], transformURL: String => (String, String)): BsonDocument = {
-    var mongoSubDoc = BsonDocument()
-    var imageryDoc = BsonArray()
+    val mongoSubDoc = BsonDocument()
+    val imageryDoc = BsonArray()
+    val nonImageryDoc = BsonArray()
 
     dataObjects.foreach { obj =>
       val manifestId = (obj \ "ID").as[String]
@@ -212,19 +218,19 @@ object ManifestUtils {
           ))
       }
       else {
-        val updatedMongoSubDoc =
-          BsonDocument(
-            "_id" -> BsonString(generateUUID()),
-            "status" -> BsonString("remote"),
-            "fileName" -> BsonString(fileName),
-            "url" -> BsonString(fileUrl),
-            "size" -> BsonInt64(size)
-          )
-        mongoSubDoc.append(manifestId, updatedMongoSubDoc)
+        nonImageryDoc.add(BsonDocument(
+          "_id" -> BsonString(manifestId),
+          "status" -> BsonString("remote"),
+          "fileName" -> BsonString(fileName),
+          "url" -> BsonString(fileUrl),
+          "size" -> BsonInt64(size)
+        )
+        )
       }
     }
 
     mongoSubDoc.append("imagery", imageryDoc)
+    mongoSubDoc.append("metadata", nonImageryDoc)
     mongoSubDoc
   }
 
