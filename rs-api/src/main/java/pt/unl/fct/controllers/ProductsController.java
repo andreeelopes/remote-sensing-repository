@@ -2,28 +2,42 @@ package pt.unl.fct.controllers;
 
 
 import io.swagger.annotations.ApiParam;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pt.unl.fct.api.ProductsApi;
 import pt.unl.fct.errors.BadRequestException;
+import pt.unl.fct.errors.ConflictException;
+import pt.unl.fct.errors.InternalServerException;
+import pt.unl.fct.errors.NotFoundException;
+import pt.unl.fct.model.CustomMetadata;
 import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
+import pt.unl.fct.model.SchemaJson;
 import pt.unl.fct.services.ProductService;
+import pt.unl.fct.services.SchemaService;
+import pt.unl.fct.utils.Utils;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Null;
+import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class ProductsController implements ProductsApi {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private SchemaService schemaService;
+
 
     @Override
     public Object getProduct(@ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId) {
@@ -31,28 +45,57 @@ public class ProductsController implements ProductsApi {
     }
 
     @Override
-    public void fetchProductData(@ApiParam(value = "Data object to be fetched") @Valid @RequestBody FetchData fetchData) throws IOException {
+    public void fetchProductData(@ApiParam(value = "Data object to be fetched") @Valid @RequestBody FetchData fetchData) {
         productService.fetchProductData(fetchData);
     }
 
     @Override
-    public void addProduct(@Valid Product product) {
+    public void addProduct(@ApiParam(value = "Zip file with product data") @RequestParam(value = "file") MultipartFile file,
+                           @ApiParam(value = "Product metadata") @RequestParam(value = "metadata") JSONObject metadata) {
 
+        try {
+            productService.getProduct(metadata.getString("_id"));
+            throw new ConflictException("Product with the given id already exists");
+        } catch (JSONException e) {
+            throw new BadRequestException("Malformed json - " + e.getMessage());
+        } catch (NotFoundException ignored) {
+        }
+
+        schemaService.validateSchema(metadata);
+
+        try {
+            File zip = File.createTempFile(UUID.randomUUID().toString(), "temp");
+            file.transferTo(zip);
+
+            try {
+                ZipFile zipFile = new ZipFile(zip);
+                zipFile.extractAll(Utils.BASE_DIR);
+            } catch (ZipException e) {
+                e.printStackTrace();
+                throw new InternalServerException("Uploaded file is not a zip");
+            } finally {
+                zip.delete();
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new InternalServerException("Error while saving product data to disk");
+        }
+
+
+        productService.addProduct(metadata);
     }
 
     @Override
-    public void updateProduct(String productId, @Valid Product product) {
-
+    public void updateProduct(@ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId,
+                              @ApiParam(value = "Custom metadata to be added", required = true) @Valid @RequestBody CustomMetadata customMetadata) {
+        productService.updateProduct(customMetadata);
     }
 
     @Override
     public void deleteProductData(Long productId, Long dataID) {
 
-    }
-
-    @Override
-    public List<Object> getSchema() {
-        return productService.getSchema();
     }
 
     @Override

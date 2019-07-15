@@ -4,14 +4,16 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.json.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import pt.unl.fct.model.CustomMetadata;
 import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.List;
 
 public interface ProductsApi {
 
@@ -41,6 +43,7 @@ public interface ProductsApi {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Data download scheduled", response = FetchData.class, responseContainer = "List"),
             @ApiResponse(code = 404, message = "Product or data object do not exist"),
+            @ApiResponse(code = 500, message = "Work submission failed"),
             @ApiResponse(code = 409, message = "Data is already stored locally"),})
     @RequestMapping(value = "/products/{productId}/data/{dataId}",
             produces = {"application/json"},
@@ -52,26 +55,32 @@ public interface ProductsApi {
     @ApiOperation(value = "Adds a new product", nickname = "addProduct", notes = "", tags = {"products-controller",})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Added a new product"),
-            @ApiResponse(code = 405, message = "Invalid input")})
+            @ApiResponse(code = 409, message = "Product with the given id already exists"),
+            @ApiResponse(code = 400, message = "Malformed json"),
+            @ApiResponse(code = 400, message = "Uploaded file is not a zip"),
+            @ApiResponse(code = 400, message = "Define product schema before inserting any product of this type"),
+            @ApiResponse(code = 500, message = "Error when saving product data to disk"),
+            @ApiResponse(code = 400, message = "Wrong metadata schema"),
+            @ApiResponse(code = 400, message = "Product type is not present in metadata")
+    })
     @RequestMapping(value = "/products",
-            produces = {"application/json"},
-            consumes = {"application/json"},
+            consumes = {"multipart/form-data"},
             method = RequestMethod.POST)
-    void addProduct(@ApiParam(value = "Product object to be added", required = true)
-                    @Valid @RequestBody Product product);
+    void addProduct(MultipartFile file, JSONObject metadata);
 
-    @ApiOperation(value = "Add metadata to product", nickname = "updateProduct", notes = "", tags = {"products-controller",})
+    @ApiOperation(value = "Add custom metadata to product", nickname = "updateProduct", notes = "", tags = {"products-controller",})
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Product updated successfully"),
+            @ApiResponse(code = 200, message = "Product updated successfully"),
             @ApiResponse(code = 404, message = "Product does not exist"),
-            @ApiResponse(code = 405, message = "Invalid input")})
+            @ApiResponse(code = 400, message = "Custom metadata is not defined in the product schema"),
+            @ApiResponse(code = 400, message = "Product schema is not defined"),
+            @ApiResponse(code = 400, message = "The given value has the wrong type"),
+            @ApiResponse(code = 400, message = "Request parameter and body do not match")
+    })
     @RequestMapping(value = "/products/{productId}",
-            produces = {"application/json"},
             consumes = {"application/json"},
-            method = RequestMethod.POST)
-    void updateProduct(
-            @ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId,
-            @ApiParam(value = "Product object to be updated", required = true) @Valid @RequestBody Product product);
+            method = RequestMethod.PUT)
+    void updateProduct(String productId, CustomMetadata customMetadata);
 
 
     @ApiOperation(value = "Delete product data", nickname = "deleteProductData", notes = "", tags = {"products-controller",})
@@ -83,12 +92,4 @@ public interface ProductsApi {
     void deleteProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") Long productId,
                            @ApiParam(value = "ID of the data to be deleted", required = true) @PathVariable("dataId") Long dataID);
 
-
-    @ApiOperation(value = "Get the metamodel of each one of the products", nickname = "getSchema", notes = "Returns an array of json schemas describing the metamodel", response = List.class, tags = {"products-controller",})
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Successful operation", response = Object.class),})
-    @RequestMapping(value = "/schema",
-            produces = {"application/json"},
-            method = RequestMethod.GET)
-    List<Object> getSchema();
 }

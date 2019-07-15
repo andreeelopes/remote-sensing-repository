@@ -2,6 +2,7 @@ package pt.unl.fct.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,7 +11,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.SchemaException;
+import org.everit.json.schema.loader.SchemaLoader;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import pt.unl.fct.errors.BadRequestException;
+import pt.unl.fct.errors.InternalServerException;
 import pt.unl.fct.errors.NotFoundException;
 import pt.unl.fct.model.FetchData;
 
@@ -18,9 +25,14 @@ import java.io.IOException;
 
 public final class Utils {
 
+    public static final Gson g = new Gson();
+
     private static String RS_ENGINE_ENDPOINT_IP = Utils.getEnvVariable("RS_ENGINE_ENDPOINT_IP", "127.0.0.1");
     private static String RS_ENGINE_ENDPOINT_PORT = Utils.getEnvVariable("RS_ENGINE_ENDPOINT_PORT", "8081");
     private static String WORK_REST_ENDPOINT = "http://" + RS_ENGINE_ENDPOINT_IP + ":" + RS_ENGINE_ENDPOINT_PORT + "/work";
+    public static String BASE_DIR = Utils.getEnvVariable("BASE_DIR", "C:\\\\Users\\\\andre\\\\Downloads\\\\data");
+    //TODO
+
 
     private static String getEnvVariable(String envVarName, String defaultValue) {
         try {
@@ -33,33 +45,35 @@ public final class Utils {
     }
 
 
-    public static void fetchHttpPost(FetchData fetchData) throws IOException {
+    public static void fetchHttpPost(FetchData fetchData) {
+        try {
+            CloseableHttpClient client = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost(WORK_REST_ENDPOINT);
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(fetchData);
 
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(WORK_REST_ENDPOINT);
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(fetchData);
+            StringEntity stringEntity = new StringEntity(json);
 
-        StringEntity stringEntity = new StringEntity(json);
+            httpPost.setEntity(stringEntity);
+            httpPost.setHeader("Accept", "application/json");
+            httpPost.setHeader("Content-type", "application/json");
 
-        httpPost.setEntity(stringEntity);
-        httpPost.setHeader("Accept", "application/json");
-        httpPost.setHeader("Content-type", "application/json");
+            CloseableHttpResponse response = client.execute(httpPost);
 
-        CloseableHttpResponse response = client.execute(httpPost);
+            if (response.getStatusLine().getStatusCode() != 202) {
+                String entityString = EntityUtils.toString(response.getEntity(), "UTF-8");
 
-        if (response.getStatusLine().getStatusCode() != 202) {
-            String entityString = EntityUtils.toString(response.getEntity(), "UTF-8");
-
-            if (response.getStatusLine().getStatusCode() == 404){
-                throw new NotFoundException(entityString);
+                if (response.getStatusLine().getStatusCode() == 404) {
+                    throw new NotFoundException(entityString);
+                } else if (response.getStatusLine().getStatusCode() == 400)
+                    throw new BadRequestException(entityString);
             }
-            else if (response.getStatusLine().getStatusCode() == 400)
-                throw new BadRequestException(entityString);
+
+            client.close();
+
+        } catch (IOException e) {
+            throw new InternalServerException("Work submission failed");
         }
-
-        client.close();
     }
-
 }
 
