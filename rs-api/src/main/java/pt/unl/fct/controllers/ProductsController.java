@@ -69,7 +69,7 @@ public class ProductsController implements ProductsApi {
 
             try {
                 ZipFile zipFile = new ZipFile(zip);
-                zipFile.extractAll(Utils.BASE_DIR);
+                zipFile.extractAll(Utils.BASE_DIR + "/" + metadata.getString("_id"));
             } catch (ZipException e) {
                 e.printStackTrace();
                 throw new InternalServerException("Uploaded file is not a zip");
