@@ -20,7 +20,7 @@ class EarthExplorerSource(config: Config,
                           override val program: String,
                           override val platform: String,
                           override val productType: String)
-  extends ProviderPeriodicRESTSource("earth-explorer", config, program, platform, productType) {
+  extends ProviderPeriodicSource("earth-explorer", config, program, platform, productType) {
   val authConfigOpt = Some(AuthConfig("earth-explorer", config))
 
   val epochWork: EarthExplorerWork = generateWork(historyDates, isEpoch = true)
@@ -40,7 +40,7 @@ class EarthExplorerWork(override val source: EarthExplorerSource,
                         override val intervalDates: (DateTime, DateTime),
                         override val isEpoch: Boolean = false,
                         override val pageStart: Int = 0)
-  extends ProviderPeriodicRESTWork(source, intervalDates, isEpoch, pageStart) {
+  extends ProviderPeriodicWork(source, intervalDates, isEpoch, pageStart) {
 
   import sources.handlers.EarthExplorerUtils._
 

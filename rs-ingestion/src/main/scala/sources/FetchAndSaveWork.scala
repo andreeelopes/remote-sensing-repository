@@ -11,7 +11,7 @@ import play.libs.ws.WSCookie
 import sources.handlers.{AuthConfig, ErrorHandlers}
 import utils.AuthException
 import utils.HTTPClient.singleRequest
-import utils.Utils.writeFile
+import utils.Utils.{ProductConf, writeFile}
 import DefaultBodyReadables._
 
 import scala.collection.JavaConverters._
@@ -23,6 +23,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class FetchAndSaveSource(configName: String,
                          val isEarthExplorer: Boolean = false,
                          val productType: String,
+                         val fetchingProvider: String,
                          override val authConfigOpt: Option[AuthConfig] = None,
                          val errorHandler: (Int, Array[Byte], String, ActorMaterializer) => Unit = ErrorHandlers.defaultErrorHandler)
   extends Source(configName)
@@ -42,7 +43,6 @@ class FetchAndSaveWork(override val source: FetchAndSaveSource,
     else {
       val wsClient = StandaloneAhcWSClient()
 
-
       var wsClientUrl =
         wsClient
           .url(url)
@@ -57,9 +57,9 @@ class FetchAndSaveWork(override val source: FetchAndSaveSource,
       cookies.foreach { c => wsClientUrl = wsClientUrl.addCookies(DefaultWSCookie(c._1, c._2)) }
 
       val wsClientAuth =
-        if (source.isEarthExplorer && source.productType != "MODIS_MYD13Q1_V6")
+        if (source.isEarthExplorer && source.fetchingProvider != "search-data-nasa")
           wsClientUrl.withAuth(source.authConfigOpt.get.username, source.authConfigOpt.get.password, WSAuthScheme.BASIC)
-        else if (source.productType == "MODIS_MYD13Q1_V6") {
+        else if (source.fetchingProvider != "search-data-nasa") {
           val authConfig = Some(AuthConfig("search-data-nasa", source.config))
           wsClientUrl.withAuth(authConfig.get.username, authConfig.get.password, WSAuthScheme.BASIC)
         }
@@ -72,7 +72,6 @@ class FetchAndSaveWork(override val source: FetchAndSaveSource,
           println(response.headers)
           process(response.body[Array[Byte]])
         }.andThen { case _ => wsClient.close() }
-
     }
   }
 

@@ -121,7 +121,7 @@ object Parsing {
     val transformedTry = Try {
 
       val value = extraction.resultType match {
-        case "string" | "int" | "double" | "boolean" | "date" =>
+        case "string" | "long" | "double" | "boolean" | "date" =>
 
           val result = Try(JsonPath.read[String](docStr, extraction.query).toString) match {
             case Failure(_) =>
@@ -132,7 +132,7 @@ object Parsing {
 
 
           extraction.resultType match {
-            case "int" => result.toInt
+            case "long" => result.toLong
             case "double" => result.toDouble
             case "boolean" => result.toBoolean
             case "date" => try {
@@ -154,7 +154,7 @@ object Parsing {
 
       val transformedAny = Transformations.transform(productId, extraction, value)
       extraction.resultTypeAftrTransf match {
-        case "int" => BsonInt64(transformedAny.asInstanceOf[Int])
+        case "long" => BsonInt64(transformedAny.asInstanceOf[Long])
         case "double" => BsonDouble(transformedAny.asInstanceOf[Double])
         case "boolean" => BsonBoolean(transformedAny.asInstanceOf[Boolean])
         case "string" => BsonString(transformedAny.asInstanceOf[String])
@@ -207,7 +207,7 @@ object Parsing {
       val resultJson = Json.parse(result).as[List[JsValue]]
 
       val resultsTyped = extraction.resultType match {
-        case "int" => resultJson.map(_.as[Int])
+        case "long" => resultJson.map(_.as[Long])
         case "double" => resultJson.map(_.as[Double])
         case "boolean" => resultJson.map(_.as[Boolean])
         case "string" => resultJson.map(_.as[String])
@@ -218,7 +218,7 @@ object Parsing {
       val transformedAny = Transformations.transform(productId, extraction, resultsTyped)
 
       extraction.resultTypeAftrTransf match {
-        case "int" => BsonArray(transformedAny.asInstanceOf[List[Int]])
+        case "long" => BsonArray(transformedAny.asInstanceOf[List[Long]])
         case "double" => BsonArray(transformedAny.asInstanceOf[List[Double]])
         case "boolean" => BsonArray(transformedAny.asInstanceOf[List[Boolean]])
         case "string" => BsonArray(transformedAny.asInstanceOf[List[String]])

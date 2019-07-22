@@ -18,7 +18,7 @@ class CopernicusOSearchSource(config: Config,
                               override val program: String,
                               override val platform: String,
                               override val productType: String)
-  extends ProviderPeriodicRESTSource("copernicus-oah-opensearch", config, program, platform, productType) {
+  extends ProviderPeriodicSource("copernicus-oah-opensearch", config, program, platform, productType) {
 
   override val configName = "copernicus-oah-opensearch"
   override val PROVIDER: String = "copernicus"
@@ -38,7 +38,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
                             override val intervalDates: (DateTime, DateTime),
                             override val isEpoch: Boolean = false,
                             override val pageStart: Int = 0)
-  extends ProviderPeriodicRESTWork(source, intervalDates, isEpoch, pageStart) {
+  extends ProviderPeriodicWork(source, intervalDates, isEpoch, pageStart) {
 
   override val url: String = s"${source.baseUrl}start=$pageStart&rows=${source.pageSize}&" +
     s"q=endposition:[${intervalDates._1.toString(dateFormat)}%20TO%20${intervalDates._2.toString(dateFormat)}]" +

@@ -146,8 +146,6 @@ object MongoDAO {
 
     val docJson = Json.parse(doc.toJson)
 
-    var isImagery = true
-
     val transformer = __.read[JsArray].map {
       case JsArray(values) =>
 
@@ -165,7 +163,7 @@ object MongoDAO {
           })
         }
         else {
-          isImagery = false
+          throw new Exception()
           JsArray(values)
         }
 
@@ -177,11 +175,14 @@ object MongoDAO {
 
     val data = (docJson \ "data").as[JsValue]
     // carry out the transformation
-    val transformedImageryJson = data.transform(jsonImageryTransformer)
-    val transformedNonImageryJson = data.transform(jsonNonImageryTransformer)
+    val transformedImageryJson = Try(data.transform(jsonImageryTransformer)).toOption
+    val transformedNonImageryJson = Try(data.transform(jsonNonImageryTransformer)).toOption
 
     val updatedDoc =
-      if (isImagery) transformedImageryJson.get.as[JsValue] else transformedNonImageryJson.get.as[JsValue]
+      if (transformedImageryJson.isDefined)
+        transformedImageryJson.get.get.as[JsValue]
+      else
+        transformedNonImageryJson.get.get.as[JsValue]
 
     MongoDAO.addFieldToDoc(productId, "data", BsonDocument(updatedDoc.toString()))
   }

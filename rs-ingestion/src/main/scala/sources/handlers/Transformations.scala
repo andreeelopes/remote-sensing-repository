@@ -26,12 +26,23 @@ object Transformations {
            "stop_time_dayofyear" |
            "Acquisition Start Day of Year" |
            "Acquisition End Day of Year" => extractDayofYear(value.asInstanceOf[DateTime])
+      case "size" => sizeToLong(value.asInstanceOf[String])
       case _ => value
     }
   }
 
+  def sizeToLong(sizeString: String): Any = {
+    val split = sizeString.split(" ")
+
+    split(1) match {
+      case "GB" => (split(0).toFloat * 1024 * 1024 * 1024).toLong
+      case "MB" => (split(0).toFloat * 1024 * 1024).toLong
+      case "KB" => (split(0).toFloat * 1024).toLong
+    }
+  }
+
   def extractDayofYear(time: DateTime): Any = {
-    time.dayOfYear().get()
+    time.dayOfYear().get().toLong
   }
 
   def wktToGeoJson(value: String): String = {

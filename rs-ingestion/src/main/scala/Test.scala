@@ -1,11 +1,19 @@
 import java.nio.charset.StandardCharsets
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
+import mongo.MongoDAO
 import org.json.XML
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.geojson.GeoJsonWriter
 import org.locationtech.jts.io.gml2.GMLReader
 import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.ws.{DefaultWSCookie, WSAuthScheme, WSRequestFilter}
+import play.api.libs.ws.ahc.{AhcCurlRequestLogger, StandaloneAhcWSClient}
+import sources.handlers.AuthConfig
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 //import com.mongodb.async.client.MongoCollection
 //import org.bson.BsonDocument
@@ -28,12 +36,36 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 //////import org.mongodb.scala.model.Sorts._
 //////import org.mongodb.scala.model.Updates._
 //////import org.mongodb.scala.model._
-////
-//object Test extends App {
-//  val config = ConfigFactory.load(); // read Config here
 //
-//  val configJSON = config.getString("sources")
-//  println(Json.parse(configJSON) \ "copernicus-oah-opensearch")
+//object Test extends App {
+//
+//  implicit val sys = ActorSystem("MyTest")
+//  implicit val materializer = ActorMaterializer()
+//
+//  val wsClient = StandaloneAhcWSClient()
+//
+//  var wsClientUrl =
+//    wsClient
+//      .url("https://earthexplorer.usgs.gov/download/12864/LC81561192017038LGN00/STANDARD/EE")
+//      //      .withFollowRedirects(true)
+//      .withRequestFilter(AhcCurlRequestLogger())
+//
+//    wsClientUrl = wsClientUrl.addCookies(DefaultWSCookie("PHPSESSID", "if2to0klt44mqo34f05i1p9ecf"))
+//    wsClientUrl = wsClientUrl.addCookies(DefaultWSCookie("PHPSESSID", "dako59n87aae90peb5hj9r6sut"))
+//
+//  val wsClientAuth = wsClientUrl.withAuth("andrelopes", "andrelopes14", WSAuthScheme.BASIC)
+//
+//
+//  wsClientAuth
+//    .withFollowRedirects(true)
+//    .get
+//    .map { response =>
+//      println(response.status)
+//      println(response.headers)
+//      println("####")
+//      println(response.body)
+//      println("####")
+//    }.andThen { case _ => wsClient.close() }
 //
 //}
 

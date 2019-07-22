@@ -11,6 +11,7 @@ import mongo.MongoDAO
 import org.mongodb.scala.bson.{BsonDocument, BsonString, BsonValue}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json, __}
 import sources.handlers.AuthConfig
+import utils.Utils
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -67,6 +68,8 @@ class Services extends Actor with ActorLogging {
         val data = (json \ "data").as[Map[String, JsValue]]
         provider = (json \ "provider").as[String]
         val productType = (json \ "productType").as[String]
+        val program = (json \ "program").as[String]
+        val platform = (json \ "platform").as[String]
 
         val nonImageryDataOpt =
           Try {
@@ -106,8 +109,10 @@ class Services extends Actor with ActorLogging {
             val configName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer-download-api"
             val sourceName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer"
 
+            val fetchingProvider = Utils.getProductConf(configName, program, platform, productType).fetchingProvider
+
             val work: Work = new FetchAndSaveWork(
-              new FetchAndSaveSource(configName, provider == "earth-explorer", productType, Some(AuthConfig(sourceName, config))),
+              new FetchAndSaveSource(configName, provider == "earth-explorer", productType, fetchingProvider, Some(AuthConfig(sourceName, config))),
               productId, dataObjectId, url, workTimeout, fileName
             )
 

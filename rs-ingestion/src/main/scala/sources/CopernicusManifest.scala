@@ -69,10 +69,11 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
       // generate data URLs
       processObjectsURL(dataObjects)
 
-      // split container extractions into file extractions
-      val containerExtractions = source.extractions.filter(e => e.queryType == "container")
-      containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, docStr))
-      extractions :::= source.extractions.diff(containerExtractions).diff(manifestExtractions)
+      //      // split container extractions into file extractions
+      //      val containerExtractions = source.extractions.filter(e => e.queryType == "container")
+      //      containerExtractions.foreach(e => extractions :::= processContainerExtraction(e, docStr))
+
+      extractions :::= source.extractions.diff(manifestExtractions) //.diff(containerExtractions)
 
       // aggregate queries
       var extMap = Map[String, List[Extraction]]()
@@ -131,15 +132,15 @@ class CopernicusManifestWork(override val source: CopernicusManifestSource, val 
     (s"${source.baseUrl}Products('$productId')/Nodes('$title.${source.manifestFormat}')/" + filePath, pathFragments.last)
   }
 
-  private def processContainerExtraction(extraction: Extraction, doc: String) = {
-    val result = JsonPath.read[JSONArray](doc,
-      s"$$.xfdu:XFDU.informationPackageMap.xfdu:contentUnit..xfdu:contentUnit[?(@.ID=='${extraction.name}')]..dataObjectID").toJSONString
 
-    Json.parse(result)
-      .as[List[String]]
-      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, "", null, updateUrl = false))
-
-  }
+  //  private def processContainerExtraction(extraction: Extraction, doc: String) = {
+  //    val result = JsonPath.read[JSONArray](doc,
+  //      s"$$.xfdu:XFDU.informationPackageMap.xfdu:contentUnit..xfdu:contentUnit[?(@.ID=='${extraction.name}')]..dataObjectID").toJSONString
+  //
+  //    Json.parse(result)
+  //      .as[List[String]]
+  //      .map(id => Extraction(id, "file", "undefined", "", "$", "", "./data/(productId)/(filename)", "", extraction.metamodelMapping, "", null, updateUrl = false))
+  //  }
 
 
 }

@@ -2,13 +2,16 @@ package utils
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, PrintWriter}
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import com.typesafe.config.{Config, ConfigFactory}
 import mongo.MongoDAO
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import sources.Extraction
+import scala.concurrent.duration._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
 
@@ -96,11 +99,29 @@ object Utils {
       ProductEntry(
         (entry \ "program").as[String],
         (entry \ "platform").as[String],
-        (entry \ "product-type").as[List[String]]
+        (entry \ "product-type").as[List[JsValue]].map(p => (p \ "name").as[String])
       )
     }
   }
 
+  case class ProductConf(name: String, epoch: Int, fetchingFrequency: FiniteDuration, fetchingProvider: String)
+
+
+  def getProductConf(configName: String, program: String, platform: String, productType: String): ProductConf = {
+    val productsArray = (MongoDAO.sourcesJson \ configName \ "products").as[JsArray].value.toList
+
+    val p = (productsArray
+      .filter(p => (p \ "program").as[String] == program && (p \ "platform").as[String] == platform)
+      .head \ "product-type").as[List[JsValue]]
+      .filter(pt => (pt \ "name").as[String] == productType)
+      .head
+
+    val name = (p \ "name").as[String]
+    val epoch = (p \ "epoch-years").as[Int]
+    val fetchingFrequency = Duration((p \ "fetching-frequency").as[Long], TimeUnit.SECONDS).toSeconds.seconds
+    val fetchingProvider = (p \ "provider").as[String]
+    ProductConf(name, epoch, fetchingFrequency, fetchingProvider)
+  }
 
   case class ProductEntry(program: String, platform: String, productType: List[String])
 
@@ -110,9 +131,10 @@ object Utils {
 
     var concurrencyLimits: Map[String, Int] = Map()
 
-    sourcesJson.foreach { case (k, json) =>
-      val limit = Try((json \ "concurrency-limit").as[Int]).getOrElse(Int.MaxValue)
-      concurrencyLimits += (k -> limit)
+    sourcesJson.foreach {
+      case (k, json) =>
+        val limit = Try((json \ "concurrency-limit").as[Int]).getOrElse(Int.MaxValue)
+        concurrencyLimits += (k -> limit)
     }
 
     concurrencyLimits
@@ -125,21 +147,23 @@ object Utils {
 
     val sourceProducts = (sourcesJson \ "earth-explorer").as[JsObject].value.toList
 
-    sourceProducts.foreach { p =>
-      val bandsProductOpt = Try((p._2 \ "bands").as[JsArray]).toOption
+    sourceProducts.foreach {
+      p =>
+        val bandsProductOpt = Try((p._2 \ "bands").as[JsArray]).toOption
 
-      if (bandsProductOpt.isDefined) {
-        val bandsProduct = bandsProductOpt.get
-        var bandsList = List[(String, Int, Int)]()
+        if (bandsProductOpt.isDefined) {
+          val bandsProduct = bandsProductOpt.get
+          var bandsList = List[(String, Int, Int)]()
 
-        bandsProduct.value.foreach { b =>
-          val name = (b \ "name").as[String]
-          val resolutionX = (b \ "resolution" \ "y").as[Int]
-          val resolutionY = (b \ "resolution" \ "y").as[Int]
-          bandsList ::= (name, resolutionX, resolutionY)
+          bandsProduct.value.foreach {
+            b =>
+              val name = (b \ "name").as[String]
+              val resolutionX = (b \ "resolution" \ "y").as[Int]
+              val resolutionY = (b \ "resolution" \ "y").as[Int]
+              bandsList ::= (name, resolutionX, resolutionY)
+          }
+          bands += (p._1 -> bandsList)
         }
-        bands += (p._1 -> bandsList)
-      }
     }
     bands
   }

@@ -184,6 +184,8 @@ class Master(cleanupTimeout: FiniteDuration) extends PersistentActor with ActorL
       log.info("Idle Workers: " + workers.values.count(state => !state.status.isInstanceOf[Busy]))
       log.info("--------------------")
 
+      notifyWorkers() // TODO -> for backoffs after timeout that are not cover in register worker phase
+
       workers.foreach {
         case (workerId, WorkerState(_, Busy(workId, timeout), _)) if timeout.isOverdue() =>
           log.info("Work timed out: {}", workId)
