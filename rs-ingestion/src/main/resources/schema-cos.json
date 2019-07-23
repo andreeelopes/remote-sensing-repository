@@ -3,14 +3,15 @@
   "schema": "http://json-schema.org/draft-07/schema",
   "id": "http://example.com/root.json",
   "type": "object",
-  "title": "The PARCELAS_AGRICOLAS_MORENA_IGOR Schema",
+  "description": "A Carta de Uso e Ocupação do Solo de Portugal Continental para 2015 (COS2015v1.0) é uma cartografia temática de ocupação e uso do solo para Portugal Continental para o ano de 2015, sendo a Direção-Geral do Território a entidade responsável pela sua produção. \nA informação cartográfica da COS2015v1.0 encontra-se em formato vetorial e divide o espaço em unidades de paisagem (polígonos) que partilham os conceitos de uso e ocupação do solo, não contemplando quaisquer elementos lineares ou pontuais. A COS2015v1.0 tem uma unidade mínima cartográfica (UMC) de 1 ha,  uma distância mínima entre linhas de 20m e a escala equivalente é 1:25 000. A nomenclatura é constituída por um sistema hierárquico de classes de ocupação/uso do solo, com cinco níveis, e possui 48  classes ao nível mais detalhado. Cada polígono da COS2015v1.0 é classificado apenas com um código de ocupação/uso do solo, selecionado do quinto nível hierárquico da nomenclatura. Os limites da COS2015v1.0 na fronteira com Espanha são os da Carta Administrativa Oficial de Portugal (CAOP) versão 2015 e no lado do mar são definidos por fotointerpretação.\n\nA COS2015v1.0 foi produzida com base em interpretação visual de imagens aéreas ortorretificadas, de grande resolução espacial (50 cm) e quatro bandas espectrais (azul, verde, vermelho e infravermelho próximo). No processo de produção, bem como no controlo de qualidade, utilizaram-se bases de dados auxiliares provenientes de fontes diversas, incluindo séries multi-temporais intra-anuais de imagens de satélite. As unidades de paisagem com uma dimensão inferior à UMC (1 ha) foram generalizadas de acordo com as regras bem definidas. \n\nA COS2015v1.0 foi produzida por atualização da COS2010v1.0 e neste processo fizeram-se algumas correções da COS2010, que estão agora a ser propagadas para 2007 e 1995. Quando se terminar este processo libertar-se-ão novas versões da COS1995, 2007 e 2010. Consequentemente, existem diferenças entre a COS2015v1.0 e as versões atuais das outras três COS que não correspondem a verdadeiras alterações na paisagem, mas antes a áreas que estavam mal classificadas na COS2010 e anteriores e que foram já corrigidas na COS2015 mas não nas outras COS.\n\nA COS2015v1.0 possui uma exatidão posicional melhor ou igual a 5,5 m e as seguintes exatidões globais com um erro de 2% para um nível de confiança de 95%:\nNível 1 – 96%;  Nível 2 – 90%;  Nível 3 – 88%;  Nível 4 – 88%;  Nível 5 – 83%",
+  "purpose": "A COS2015v1.0 tem como objetivo caraterizar com grande detalhe a ocupação/uso do solo no território de Portugal Continental. A cartografia de ocupação/uso do solo tem um papel fundamental no ordenamento do território e na monitorização ambiental, e a sua aplicação tem vindo a ser alargada ao planeamento ambiental, político, económico e social. Este tipo de produto cartográfico retrata um momento temporal específico e constitui uma ferramenta imprescindível no panorama atual para entidades públicas e privadas dos mais diversos setores. Com recurso a este tipo de cartografia, pode-se avaliar a extensão, a distribuição e a relação espacial de classes de ocupação/uso do solo, identificar locais próprios para certas atividades e planear o presente e o futuro de uma forma fundamentada. Simultaneamente, a cartografia de ocupação/uso do solo serve de base para a produção de informação mais complexa sobre outros temas (e.g. erosão do solo, impermeabilização, emissões de gases com efeito de estufa).",
+  "title": "The COS2015 Schema",
   "required": [
     "_id",
     "program",
     "platform",
     "productType",
     "provider",
-    "author",
     "title",
     "custom",
     "footprint",
@@ -18,13 +19,6 @@
     "acquisitionDayOfYearStart",
     "acquisitionDateEnd",
     "acquisitionDayOfYearEnd",
-    "frameworkMatrix",
-    "accuracyPerColumn",
-    "accuracyPerLine",
-    "parcelsAverageArea",
-    "parcelsAveragePerimeter",
-    "parcelsCount",
-    "processedProducts",
     "data"
   ],
   "properties": {
@@ -34,7 +28,7 @@
       "title": "Product id",
       "default": "",
       "examples": [
-        "PA_MORENA_2015_LEZIRIATEJO"
+        "COS2015"
       ],
       "pattern": "^(.*)$"
     },
@@ -44,10 +38,10 @@
       "title": "The Program that generated this product",
       "default": "",
       "enum": [
-        "MORENA"
+        "COS"
       ],
       "examples": [
-        "MORENA"
+        "COS"
       ],
       "pattern": "^(.*)$"
     },
@@ -57,10 +51,10 @@
       "title": "The platform where this product was acquired or generated",
       "default": "",
       "enum": [
-        "Igor Ruivo"
+        "COS2015"
       ],
       "examples": [
-        "Igor Ruivo"
+        "COS2015"
       ],
       "pattern": "^(.*)$"
     },
@@ -70,10 +64,10 @@
       "title": "Product type id",
       "default": "",
       "enum": [
-        "PARCELAS_AGRICOLAS_MORENA_IGOR"
+        "COS2015"
       ],
       "examples": [
-        "PARCELAS_AGRICOLAS_MORENA_IGOR"
+        "COS2015"
       ],
       "pattern": "^(.*)$"
     },
@@ -83,10 +77,10 @@
       "title": "Product provider",
       "default": "",
       "enum": [
-        "DI@FCT-UNL"
+        "DGT - Direção-Geral do Território"
       ],
       "examples": [
-        "DI@FCT-UNL"
+        "DGT - Direção-Geral do Território"
       ],
       "pattern": "^(.*)$"
     },
@@ -96,20 +90,7 @@
       "title": "Product name",
       "default": "",
       "examples": [
-        "Parcelas Agrícolas da região da Lezíria do Tejo de 2015 computadas por Igor Ruivo no programa MORENA"
-      ],
-      "pattern": "^(.*)$"
-    },
-    "author": {
-      "id": "#/properties/author",
-      "type": "string",
-      "title": "Author of the product",
-      "default": "",
-      "enum": [
-        "Igor Ruivo"
-      ],
-      "examples": [
-        "Igor Ruivo"
+        "Cartografia de uso e ocupação de solo 2015"
       ],
       "pattern": "^(.*)$"
     },
@@ -186,114 +167,6 @@
       ],
       "pattern": "^(.*)$"
     },
-    "frameworkMatrix": {
-      "id": "#/properties/frameworkMatrix",
-      "type": "array",
-      "title": "Framework matrix from where it is derived the product accuracy",
-      "items": {
-        "id": "#/properties/frameworkMatrix/items",
-        "type": "array",
-        "title": "The Items Schema"
-      }
-    },
-    "accuracyPerColumn": {
-      "id": "#/properties/accuracyPerColumn",
-      "type": "number",
-      "title": "",
-      "default": "",
-      "examples": [
-        "10.5"
-      ]
-    },
-    "accuracyPerLine": {
-      "id": "#/properties/accuracyPerLine",
-      "type": "number",
-      "title": "",
-      "default": "",
-      "examples": [
-        "10.5"
-      ]
-    },
-    "parcelsAverageArea": {
-      "id": "#/properties/parcelsAverageArea",
-      "type": "number",
-      "title": "Agricultural parcels average area in km2",
-      "default": "",
-      "examples": [
-        "10.5"
-      ]
-    },
-    "parcelsAveragePerimeter": {
-      "id": "#/properties/parcelsAveragePerimeter",
-      "type": "number",
-      "title": "Agricultural parcels average perimeter in km2",
-      "default": "",
-      "examples": [
-        "10.5"
-      ]
-    },
-    "parcelsCount": {
-      "id": "#/properties/parcelsCount",
-      "type": "integer",
-      "title": "Number of agricultural parcels in the product area",
-      "default": "",
-      "examples": [
-        "100"
-      ]
-    },
-    "processedProducts": {
-      "id": "#/properties/processedProducts",
-      "type": "array",
-      "title": "Framework matrix from where it is derived the product accuracy",
-      "required": [
-        "bands",
-        "dates",
-        "granuleid"
-      ],
-      "properties": {
-        "bands": {
-          "id": "#/properties/processedProducts/properties/bands",
-          "type": "array",
-          "title": "Product bands processed",
-          "items": {
-            "id": "#/properties/processedProducts/properties/bands/items",
-            "type": "string",
-            "title": "The Items Schema",
-            "default": "",
-            "examples": [
-              "1",
-              "2"
-            ],
-            "pattern": "^(.*)$"
-          }
-        },
-        "dates": {
-          "id": "#/properties/processedProducts/properties/dates",
-          "type": "array",
-          "title": "Granule dates of the products processed",
-          "items": {
-            "id": "#/properties/processedProducts/properties/dates/items",
-            "type": "string",
-            "title": "The Items Schema",
-            "default": "",
-            "examples": [
-              "2019-07-23T01:17:39.024Z"
-            ],
-            "pattern": "^(.*)$"
-          }
-        },
-        "granuleid": {
-          "id": "#/properties/processedProducts/properties/granuleid",
-          "type": "string",
-          "title": "Granule identifier by US MGRS",
-          "default": "",
-          "examples": [
-            "53NMJ"
-          ],
-          "pattern": "^(.*)$"
-        }
-      }
-    },
     "data": {
       "id": "#/properties/data",
       "type": "object",
@@ -337,7 +210,7 @@
                 "title": "Data object description",
                 "default": "",
                 "examples": [
-                  "Shapefile with all the agricultural parcels in this area"
+                  "Product raster file"
                 ],
                 "pattern": "^(.*)$"
               },
@@ -347,7 +220,7 @@
                 "title": "Data object URL",
                 "default": "",
                 "examples": [
-                  "./data/PARCELAS_AGRICOLAS_MORENA_IGOR/ZIP_PATH_FOR_FILE"
+                  "./data/COS2015/ZIP_PATH_FOR_FILE"
                 ],
                 "pattern": "^(.*)$"
               },
@@ -362,7 +235,7 @@
                 "properties": {
                   "x": {
                     "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/x",
-                    "type": "integer",
+                    "type": "number",
                     "title": "The X Schema",
                     "default": 0,
                     "examples": [
@@ -371,7 +244,7 @@
                   },
                   "y": {
                     "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/y",
-                    "type": "integer",
+                    "type": "number",
                     "title": "The Y Schema",
                     "default": 0,
                     "examples": [
@@ -398,8 +271,7 @@
                 "title": "Data Object format",
                 "default": "",
                 "examples": [
-                  "tif",
-                  "shp"
+                  "tif"
                 ],
                 "pattern": "^(.*)$"
               }
@@ -438,7 +310,7 @@
                 "title": "Data object description",
                 "default": "",
                 "examples": [
-                  "Algorithm accuracy plot"
+                  "Product extensive metadata file"
                 ],
                 "pattern": "^(.*)$"
               },
@@ -448,7 +320,7 @@
                 "title": "Data object URL",
                 "default": "",
                 "examples": [
-                  "./data/PARCELAS_AGRICOLAS_MORENA_IGOR/ZIP_PATH_FOR_FILE"
+                  "./data/COS2015/ZIP_PATH_FOR_FILE"
                 ],
                 "pattern": "^(.*)$"
               },

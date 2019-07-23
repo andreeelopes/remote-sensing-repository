@@ -109,7 +109,7 @@ class Services extends Actor with ActorLogging {
             val configName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer-download-api"
             val sourceName = if (provider == "copernicus") "copernicus-oah-odata" else "earth-explorer"
 
-            val fetchingProvider = Utils.getProductConf(configName, program, platform, productType).fetchingProvider
+            val fetchingProvider = Utils.getProductConf(sourceName, program, platform, productType).fetchingProvider
 
             val work: Work = new FetchAndSaveWork(
               new FetchAndSaveSource(configName, provider == "earth-explorer", productType, fetchingProvider, Some(AuthConfig(sourceName, config))),

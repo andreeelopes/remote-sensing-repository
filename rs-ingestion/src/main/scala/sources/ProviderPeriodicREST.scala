@@ -98,7 +98,6 @@ abstract class ProviderPeriodicWork(override val source: ProviderPeriodicSource,
         "platform" -> BsonString(source.platform),
         "productType" -> BsonString(source.productType),
         "provider" -> BsonString(source.PROVIDER),
-        "ingestionDate" -> BsonDateTime(new DateTime().toDate),
         "custom" -> BsonDocument()
       )
     )

@@ -27,9 +27,16 @@ object Transformations {
            "Acquisition Start Day of Year" |
            "Acquisition End Day of Year" => extractDayofYear(value.asInstanceOf[DateTime])
       case "size" => sizeToLong(value.asInstanceOf[String])
+      case "granuleId" => extractGranuleIdFromName(value.asInstanceOf[String])
       case _ => value
     }
   }
+
+  def extractGranuleIdFromName(productName: String): Any = {
+    val split = productName.split("_").toList
+    split(split.size - 2).drop(1)
+  }
+
 
   def sizeToLong(sizeString: String): Any = {
     val split = sizeString.split(" ")
