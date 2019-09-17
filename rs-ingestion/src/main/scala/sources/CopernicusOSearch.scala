@@ -50,12 +50,12 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-    //    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+        getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
     val entriesOpt = Try((doc \ "feed" \ "entry").as[List[JsObject]])
     entriesOpt match {
       case Failure(_) => // there are no products in this time interval
-      case Success(entries) => entries.headOption.foreach(entry => workToBeDone :::= processEntry(entry))
+      case Success(entries) => entries.foreach(entry => workToBeDone :::= processEntry(entry))
     }
 
     saveFetchingLog(BsonDocument(docJson))

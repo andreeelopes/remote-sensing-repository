@@ -1,7 +1,7 @@
 {
   "definitions": {},
   "schema": "http://json-schema.org/draft-07/schema",
-  "id": "http://example.com/root.json",
+  "$id": "http://example.com/root.json",
   "type": "object",
   "title": "The PARCELAS_AGRICOLAS_MORENA_IGOR Schema",
   "required": [
@@ -29,7 +29,7 @@
   ],
   "properties": {
     "_id": {
-      "id": "#/properties/_id",
+      "$id": "#/properties/_id",
       "type": "string",
       "title": "Product id",
       "default": "",
@@ -39,7 +39,7 @@
       "pattern": "^(.*)$"
     },
     "program": {
-      "id": "#/properties/program",
+      "$id": "#/properties/program",
       "type": "string",
       "title": "The Program that generated this product",
       "default": "",
@@ -52,7 +52,7 @@
       "pattern": "^(.*)$"
     },
     "platform": {
-      "id": "#/properties/platform",
+      "$id": "#/properties/platform",
       "type": "string",
       "title": "The platform where this product was acquired or generated",
       "default": "",
@@ -65,7 +65,7 @@
       "pattern": "^(.*)$"
     },
     "productType": {
-      "id": "#/properties/productType",
+      "$id": "#/properties/productType",
       "type": "string",
       "title": "Product type id",
       "default": "",
@@ -78,7 +78,7 @@
       "pattern": "^(.*)$"
     },
     "provider": {
-      "id": "#/properties/provider",
+      "$id": "#/properties/provider",
       "type": "string",
       "title": "Product provider",
       "default": "",
@@ -91,7 +91,7 @@
       "pattern": "^(.*)$"
     },
     "title": {
-      "id": "#/properties/title",
+      "$id": "#/properties/title",
       "type": "string",
       "title": "Product name",
       "default": "",
@@ -101,7 +101,7 @@
       "pattern": "^(.*)$"
     },
     "author": {
-      "id": "#/properties/author",
+      "$id": "#/properties/author",
       "type": "string",
       "title": "Author of the product",
       "default": "",
@@ -114,14 +114,14 @@
       "pattern": "^(.*)$"
     },
     "custom": {
-      "id": "#/properties/custom",
+      "$id": "#/properties/custom",
       "type": "object",
       "title": "Custom metadata by users",
       "required": [],
       "properties": {}
     },
     "footprint": {
-      "id": "#/properties/footprint",
+      "$id": "#/properties/footprint",
       "type": "object",
       "title": "Product footprint",
       "required": [
@@ -130,7 +130,7 @@
       ],
       "properties": {
         "type": {
-          "id": "#/properties/footprint/properties/type",
+          "$id": "#/properties/footprint/properties/type",
           "type": "string",
           "title": "The Type Schema",
           "default": "",
@@ -140,14 +140,14 @@
           "pattern": "^(.*)$"
         },
         "coordinates": {
-          "id": "#/properties/footprint/properties/coordinates",
+          "$id": "#/properties/footprint/properties/coordinates",
           "type": "array",
           "title": "The Coordinates Schema"
         }
       }
     },
     "acquisitionDateStart": {
-      "id": "#/properties/acquisitionDateStart",
+      "$id": "#/properties/acquisitionDateStart",
       "type": "string",
       "title": "Starting date of the product acquisition",
       "default": "",
@@ -157,7 +157,7 @@
       "pattern": "^(.*)$"
     },
     "acquisitionDayOfYearStart": {
-      "id": "#/properties/acquisitionDayOfYearStart",
+      "$id": "#/properties/acquisitionDayOfYearStart",
       "type": "string",
       "title": "Starting day of the year of the product acquisition",
       "default": "",
@@ -167,7 +167,7 @@
       "pattern": "^(.*)$"
     },
     "acquisitionDateEnd": {
-      "id": "#/properties/acquisitionDateEnd",
+      "$id": "#/properties/acquisitionDateEnd",
       "type": "string",
       "title": "Ending date of the product acquisition",
       "default": "",
@@ -177,7 +177,7 @@
       "pattern": "^(.*)$"
     },
     "acquisitionDayOfYearEnd": {
-      "id": "#/properties/acquisitionDayOfYearEnd",
+      "$id": "#/properties/acquisitionDayOfYearEnd",
       "type": "string",
       "title": "Ending day of the year of the product acquisition",
       "default": "",
@@ -187,17 +187,17 @@
       "pattern": "^(.*)$"
     },
     "frameworkMatrix": {
-      "id": "#/properties/frameworkMatrix",
+      "$id": "#/properties/frameworkMatrix",
       "type": "array",
       "title": "Framework matrix from where it is derived the product accuracy",
       "items": {
-        "id": "#/properties/frameworkMatrix/items",
+        "$id": "#/properties/frameworkMatrix/items",
         "type": "array",
         "title": "The Items Schema"
       }
     },
     "accuracyPerColumn": {
-      "id": "#/properties/accuracyPerColumn",
+      "$id": "#/properties/accuracyPerColumn",
       "type": "number",
       "title": "",
       "default": "",
@@ -206,7 +206,7 @@
       ]
     },
     "accuracyPerLine": {
-      "id": "#/properties/accuracyPerLine",
+      "$id": "#/properties/accuracyPerLine",
       "type": "number",
       "title": "",
       "default": "",
@@ -215,7 +215,7 @@
       ]
     },
     "parcelsAverageArea": {
-      "id": "#/properties/parcelsAverageArea",
+      "$id": "#/properties/parcelsAverageArea",
       "type": "number",
       "title": "Agricultural parcels average area in km2",
       "default": "",
@@ -224,7 +224,7 @@
       ]
     },
     "parcelsAveragePerimeter": {
-      "id": "#/properties/parcelsAveragePerimeter",
+      "$id": "#/properties/parcelsAveragePerimeter",
       "type": "number",
       "title": "Agricultural parcels average perimeter in km2",
       "default": "",
@@ -233,7 +233,7 @@
       ]
     },
     "parcelsCount": {
-      "id": "#/properties/parcelsCount",
+      "$id": "#/properties/parcelsCount",
       "type": "integer",
       "title": "Number of agricultural parcels in the product area",
       "default": "",
@@ -242,7 +242,7 @@
       ]
     },
     "processedProducts": {
-      "id": "#/properties/processedProducts",
+      "$id": "#/properties/processedProducts",
       "type": "array",
       "title": "Framework matrix from where it is derived the product accuracy",
       "required": [
@@ -252,11 +252,11 @@
       ],
       "properties": {
         "bands": {
-          "id": "#/properties/processedProducts/properties/bands",
+          "$id": "#/properties/processedProducts/properties/bands",
           "type": "array",
           "title": "Product bands processed",
           "items": {
-            "id": "#/properties/processedProducts/properties/bands/items",
+            "$id": "#/properties/processedProducts/properties/bands/items",
             "type": "string",
             "title": "The Items Schema",
             "default": "",
@@ -268,11 +268,11 @@
           }
         },
         "dates": {
-          "id": "#/properties/processedProducts/properties/dates",
+          "$id": "#/properties/processedProducts/properties/dates",
           "type": "array",
           "title": "Granule dates of the products processed",
           "items": {
-            "id": "#/properties/processedProducts/properties/dates/items",
+            "$id": "#/properties/processedProducts/properties/dates/items",
             "type": "string",
             "title": "The Items Schema",
             "default": "",
@@ -283,7 +283,7 @@
           }
         },
         "granuleid": {
-          "id": "#/properties/processedProducts/properties/granuleid",
+          "$id": "#/properties/processedProducts/properties/granuleid",
           "type": "string",
           "title": "Granule identifier by US MGRS",
           "default": "",
@@ -295,7 +295,7 @@
       }
     },
     "data": {
-      "id": "#/properties/data",
+      "$id": "#/properties/data",
       "type": "object",
       "title": "Data objects location",
       "required": [
@@ -304,11 +304,11 @@
       ],
       "properties": {
         "imagery": {
-          "id": "#/properties/data/properties/imagery",
+          "$id": "#/properties/data/properties/imagery",
           "type": "array",
           "title": "Product data location",
           "items": {
-            "id": "#/properties/data/properties/imagery/items",
+            "$id": "#/properties/data/properties/imagery/items",
             "type": "object",
             "title": "The Items Schema",
             "required": [
@@ -322,7 +322,7 @@
             ],
             "properties": {
               "_id": {
-                "id": "#/properties/data/properties/imagery/items/properties/_id",
+                "$id": "#/properties/data/properties/imagery/items/properties/_id",
                 "type": "string",
                 "title": "Data object id",
                 "default": "",
@@ -332,7 +332,7 @@
                 "pattern": "^(.*)$"
               },
               "description": {
-                "id": "#/properties/data/properties/imagery/items/properties/description",
+                "$id": "#/properties/data/properties/imagery/items/properties/description",
                 "type": "string",
                 "title": "Data object description",
                 "default": "",
@@ -342,7 +342,7 @@
                 "pattern": "^(.*)$"
               },
               "url": {
-                "id": "#/properties/data/properties/imagery/items/properties/url",
+                "$id": "#/properties/data/properties/imagery/items/properties/url",
                 "type": "string",
                 "title": "Data object URL",
                 "default": "",
@@ -352,7 +352,7 @@
                 "pattern": "^(.*)$"
               },
               "resolution": {
-                "id": "#/properties/data/properties/imagery/items/properties/resolution",
+                "$id": "#/properties/data/properties/imagery/items/properties/resolution",
                 "type": "object",
                 "title": "Spatial resolution",
                 "required": [
@@ -361,7 +361,7 @@
                 ],
                 "properties": {
                   "x": {
-                    "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/x",
+                    "$id": "#/properties/data/properties/imagery/items/properties/resolution/properties/x",
                     "type": "integer",
                     "title": "The X Schema",
                     "default": 0,
@@ -370,7 +370,7 @@
                     ]
                   },
                   "y": {
-                    "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/y",
+                    "$id": "#/properties/data/properties/imagery/items/properties/resolution/properties/y",
                     "type": "integer",
                     "title": "The Y Schema",
                     "default": 0,
@@ -381,7 +381,7 @@
                 }
               },
               "status": {
-                "id": "#/properties/data/properties/imagery/items/properties/status",
+                "$id": "#/properties/data/properties/imagery/items/properties/status",
                 "type": "string",
                 "title": "Data Object status",
                 "default": "",
@@ -393,7 +393,7 @@
                 "pattern": "^(.*)$"
               },
               "format": {
-                "id": "#/properties/data/properties/imagery/items/properties/format",
+                "$id": "#/properties/data/properties/imagery/items/properties/format",
                 "type": "string",
                 "title": "Data Object format",
                 "default": "",
@@ -407,11 +407,11 @@
           }
         },
         "metadata": {
-          "id": "#/properties/data/properties/metadata",
+          "$id": "#/properties/data/properties/metadata",
           "type": "array",
           "title": "Product metadata location",
           "items": {
-            "id": "#/properties/data/properties/metadata/items",
+            "$id": "#/properties/data/properties/metadata/items",
             "type": "object",
             "title": "The Items Schema",
             "required": [
@@ -423,7 +423,7 @@
             ],
             "properties": {
               "_id": {
-                "id": "#/properties/data/properties/imagery/items/properties/_id",
+                "$id": "#/properties/data/properties/imagery/items/properties/_id",
                 "type": "string",
                 "title": "Data object id",
                 "default": "",
@@ -433,7 +433,7 @@
                 "pattern": "^(.*)$"
               },
               "description": {
-                "id": "#/properties/data/properties/imagery/items/properties/description",
+                "$id": "#/properties/data/properties/imagery/items/properties/description",
                 "type": "string",
                 "title": "Data object description",
                 "default": "",
@@ -443,7 +443,7 @@
                 "pattern": "^(.*)$"
               },
               "url": {
-                "id": "#/properties/data/properties/imagery/items/properties/url",
+                "$id": "#/properties/data/properties/imagery/items/properties/url",
                 "type": "string",
                 "title": "Data object URL",
                 "default": "",
@@ -453,7 +453,7 @@
                 "pattern": "^(.*)$"
               },
               "status": {
-                "id": "#/properties/data/properties/imagery/items/properties/status",
+                "$id": "#/properties/data/properties/imagery/items/properties/status",
                 "type": "string",
                 "title": "Data Object status",
                 "default": "",
