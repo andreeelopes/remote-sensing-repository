@@ -1,7 +1,7 @@
 {
   "definitions": {},
   "schema": "http://json-schema.org/draft-07/schema",
-  "$id": "http://example.com/root.json",
+  "id": "http://example.com/root.json",
   "type": "object",
   "title": "The PARCELAS_AGRICOLAS_MORENA_IGOR Schema",
   "required": [
@@ -10,7 +10,6 @@
     "platform",
     "productType",
     "provider",
-    "author",
     "title",
     "custom",
     "footprint",
@@ -19,8 +18,8 @@
     "acquisitionDateEnd",
     "acquisitionDayOfYearEnd",
     "frameworkMatrix",
-    "accuracyPerColumn",
-    "accuracyPerLine",
+    "producerAccuracy",
+    "userAccuracy",
     "parcelsAverageArea",
     "parcelsAveragePerimeter",
     "parcelsCount",
@@ -29,17 +28,17 @@
   ],
   "properties": {
     "_id": {
-      "$id": "#/properties/_id",
+      "id": "#/properties/_id",
       "type": "string",
       "title": "Product id",
       "default": "",
       "examples": [
         "PA_MORENA_2015_LEZIRIATEJO"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "program": {
-      "$id": "#/properties/program",
+      "id": "#/properties/program",
       "type": "string",
       "title": "The Program that generated this product",
       "default": "",
@@ -49,10 +48,10 @@
       "examples": [
         "MORENA"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "platform": {
-      "$id": "#/properties/platform",
+      "id": "#/properties/platform",
       "type": "string",
       "title": "The platform where this product was acquired or generated",
       "default": "",
@@ -62,10 +61,10 @@
       "examples": [
         "Igor Ruivo"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "productType": {
-      "$id": "#/properties/productType",
+      "id": "#/properties/productType",
       "type": "string",
       "title": "Product type id",
       "default": "",
@@ -75,10 +74,10 @@
       "examples": [
         "PARCELAS_AGRICOLAS_MORENA_IGOR"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "provider": {
-      "$id": "#/properties/provider",
+      "id": "#/properties/provider",
       "type": "string",
       "title": "Product provider",
       "default": "",
@@ -88,40 +87,27 @@
       "examples": [
         "DI@FCT-UNL"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "title": {
-      "$id": "#/properties/title",
+      "id": "#/properties/title",
       "type": "string",
       "title": "Product name",
       "default": "",
       "examples": [
         "Parcelas Agrícolas da região da Lezíria do Tejo de 2015 computadas por Igor Ruivo no programa MORENA"
       ],
-      "pattern": "^(.*)$"
-    },
-    "author": {
-      "$id": "#/properties/author",
-      "type": "string",
-      "title": "Author of the product",
-      "default": "",
-      "enum": [
-        "Igor Ruivo"
-      ],
-      "examples": [
-        "Igor Ruivo"
-      ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "custom": {
-      "$id": "#/properties/custom",
+      "id": "#/properties/custom",
       "type": "object",
       "title": "Custom metadata by users",
       "required": [],
       "properties": {}
     },
     "footprint": {
-      "$id": "#/properties/footprint",
+      "id": "#/properties/footprint",
       "type": "object",
       "title": "Product footprint",
       "required": [
@@ -130,74 +116,74 @@
       ],
       "properties": {
         "type": {
-          "$id": "#/properties/footprint/properties/type",
+          "id": "#/properties/footprint/properties/type",
           "type": "string",
           "title": "The Type Schema",
           "default": "",
           "examples": [
             "Polygon"
           ],
-          "pattern": "^(.*)$"
+          "pattern": "^(.*)"
         },
         "coordinates": {
-          "$id": "#/properties/footprint/properties/coordinates",
+          "id": "#/properties/footprint/properties/coordinates",
           "type": "array",
           "title": "The Coordinates Schema"
         }
       }
     },
     "acquisitionDateStart": {
-      "$id": "#/properties/acquisitionDateStart",
+      "id": "#/properties/acquisitionDateStart",
       "type": "string",
       "title": "Starting date of the product acquisition",
       "default": "",
       "examples": [
         "2019-07-10T23:36:16.318Z"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "acquisitionDayOfYearStart": {
-      "$id": "#/properties/acquisitionDayOfYearStart",
-      "type": "string",
+      "id": "#/properties/acquisitionDayOfYearStart",
+      "type": "integer",
       "title": "Starting day of the year of the product acquisition",
       "default": "",
       "examples": [
-        "192"
+        192
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "acquisitionDateEnd": {
-      "$id": "#/properties/acquisitionDateEnd",
+      "id": "#/properties/acquisitionDateEnd",
       "type": "string",
       "title": "Ending date of the product acquisition",
       "default": "",
       "examples": [
         "2019-07-10T23:36:48.088Z"
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "acquisitionDayOfYearEnd": {
-      "$id": "#/properties/acquisitionDayOfYearEnd",
-      "type": "string",
+      "id": "#/properties/acquisitionDayOfYearEnd",
+      "type": "integer",
       "title": "Ending day of the year of the product acquisition",
       "default": "",
       "examples": [
-        "192"
+        192
       ],
-      "pattern": "^(.*)$"
+      "pattern": "^(.*)"
     },
     "frameworkMatrix": {
-      "$id": "#/properties/frameworkMatrix",
+      "id": "#/properties/frameworkMatrix",
       "type": "array",
       "title": "Framework matrix from where it is derived the product accuracy",
       "items": {
-        "$id": "#/properties/frameworkMatrix/items",
+        "id": "#/properties/frameworkMatrix/items",
         "type": "array",
         "title": "The Items Schema"
       }
     },
-    "accuracyPerColumn": {
-      "$id": "#/properties/accuracyPerColumn",
+    "producerAccuracy": {
+      "id": "#/properties/producerAccuracy",
       "type": "number",
       "title": "",
       "default": "",
@@ -205,8 +191,8 @@
         "10.5"
       ]
     },
-    "accuracyPerLine": {
-      "$id": "#/properties/accuracyPerLine",
+    "userAccuracy": {
+      "id": "#/properties/userAccuracy",
       "type": "number",
       "title": "",
       "default": "",
@@ -215,7 +201,7 @@
       ]
     },
     "parcelsAverageArea": {
-      "$id": "#/properties/parcelsAverageArea",
+      "id": "#/properties/parcelsAverageArea",
       "type": "number",
       "title": "Agricultural parcels average area in km2",
       "default": "",
@@ -224,7 +210,7 @@
       ]
     },
     "parcelsAveragePerimeter": {
-      "$id": "#/properties/parcelsAveragePerimeter",
+      "id": "#/properties/parcelsAveragePerimeter",
       "type": "number",
       "title": "Agricultural parcels average perimeter in km2",
       "default": "",
@@ -233,7 +219,7 @@
       ]
     },
     "parcelsCount": {
-      "$id": "#/properties/parcelsCount",
+      "id": "#/properties/parcelsCount",
       "type": "integer",
       "title": "Number of agricultural parcels in the product area",
       "default": "",
@@ -242,7 +228,7 @@
       ]
     },
     "processedProducts": {
-      "$id": "#/properties/processedProducts",
+      "id": "#/properties/processedProducts",
       "type": "array",
       "title": "Framework matrix from where it is derived the product accuracy",
       "required": [
@@ -252,11 +238,11 @@
       ],
       "properties": {
         "bands": {
-          "$id": "#/properties/processedProducts/properties/bands",
+          "id": "#/properties/processedProducts/properties/bands",
           "type": "array",
           "title": "Product bands processed",
           "items": {
-            "$id": "#/properties/processedProducts/properties/bands/items",
+            "id": "#/properties/processedProducts/properties/bands/items",
             "type": "string",
             "title": "The Items Schema",
             "default": "",
@@ -264,38 +250,38 @@
               "1",
               "2"
             ],
-            "pattern": "^(.*)$"
+            "pattern": "^(.*)"
           }
         },
         "dates": {
-          "$id": "#/properties/processedProducts/properties/dates",
+          "id": "#/properties/processedProducts/properties/dates",
           "type": "array",
           "title": "Granule dates of the products processed",
           "items": {
-            "$id": "#/properties/processedProducts/properties/dates/items",
+            "id": "#/properties/processedProducts/properties/dates/items",
             "type": "string",
             "title": "The Items Schema",
             "default": "",
             "examples": [
               "2019-07-23T01:17:39.024Z"
             ],
-            "pattern": "^(.*)$"
+            "pattern": "^(.*)"
           }
         },
         "granuleid": {
-          "$id": "#/properties/processedProducts/properties/granuleid",
+          "id": "#/properties/processedProducts/properties/granuleid",
           "type": "string",
           "title": "Granule identifier by US MGRS",
           "default": "",
           "examples": [
             "53NMJ"
           ],
-          "pattern": "^(.*)$"
+          "pattern": "^(.*)"
         }
       }
     },
     "data": {
-      "$id": "#/properties/data",
+      "id": "#/properties/data",
       "type": "object",
       "title": "Data objects location",
       "required": [
@@ -304,11 +290,11 @@
       ],
       "properties": {
         "imagery": {
-          "$id": "#/properties/data/properties/imagery",
+          "id": "#/properties/data/properties/imagery",
           "type": "array",
           "title": "Product data location",
           "items": {
-            "$id": "#/properties/data/properties/imagery/items",
+            "id": "#/properties/data/properties/imagery/items",
             "type": "object",
             "title": "The Items Schema",
             "required": [
@@ -322,37 +308,37 @@
             ],
             "properties": {
               "_id": {
-                "$id": "#/properties/data/properties/imagery/items/properties/_id",
+                "id": "#/properties/data/properties/imagery/items/properties/_id",
                 "type": "string",
                 "title": "Data object id",
                 "default": "",
                 "examples": [
                   "23053239-7068-4a37-8033-bd125d1cb30d"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "description": {
-                "$id": "#/properties/data/properties/imagery/items/properties/description",
+                "id": "#/properties/data/properties/imagery/items/properties/description",
                 "type": "string",
                 "title": "Data object description",
                 "default": "",
                 "examples": [
                   "Shapefile with all the agricultural parcels in this area"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "url": {
-                "$id": "#/properties/data/properties/imagery/items/properties/url",
+                "id": "#/properties/data/properties/imagery/items/properties/url",
                 "type": "string",
                 "title": "Data object URL",
                 "default": "",
                 "examples": [
                   "./data/PARCELAS_AGRICOLAS_MORENA_IGOR/ZIP_PATH_FOR_FILE"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "resolution": {
-                "$id": "#/properties/data/properties/imagery/items/properties/resolution",
+                "id": "#/properties/data/properties/imagery/items/properties/resolution",
                 "type": "object",
                 "title": "Spatial resolution",
                 "required": [
@@ -361,7 +347,7 @@
                 ],
                 "properties": {
                   "x": {
-                    "$id": "#/properties/data/properties/imagery/items/properties/resolution/properties/x",
+                    "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/x",
                     "type": "integer",
                     "title": "The X Schema",
                     "default": 0,
@@ -370,7 +356,7 @@
                     ]
                   },
                   "y": {
-                    "$id": "#/properties/data/properties/imagery/items/properties/resolution/properties/y",
+                    "id": "#/properties/data/properties/imagery/items/properties/resolution/properties/y",
                     "type": "integer",
                     "title": "The Y Schema",
                     "default": 0,
@@ -381,7 +367,7 @@
                 }
               },
               "status": {
-                "$id": "#/properties/data/properties/imagery/items/properties/status",
+                "id": "#/properties/data/properties/imagery/items/properties/status",
                 "type": "string",
                 "title": "Data Object status",
                 "default": "",
@@ -390,10 +376,10 @@
                   "pending",
                   "local"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "format": {
-                "$id": "#/properties/data/properties/imagery/items/properties/format",
+                "id": "#/properties/data/properties/imagery/items/properties/format",
                 "type": "string",
                 "title": "Data Object format",
                 "default": "",
@@ -401,17 +387,17 @@
                   "tif",
                   "shp"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               }
             }
           }
         },
         "metadata": {
-          "$id": "#/properties/data/properties/metadata",
+          "id": "#/properties/data/properties/metadata",
           "type": "array",
           "title": "Product metadata location",
           "items": {
-            "$id": "#/properties/data/properties/metadata/items",
+            "id": "#/properties/data/properties/metadata/items",
             "type": "object",
             "title": "The Items Schema",
             "required": [
@@ -423,37 +409,37 @@
             ],
             "properties": {
               "_id": {
-                "$id": "#/properties/data/properties/imagery/items/properties/_id",
+                "id": "#/properties/data/properties/imagery/items/properties/_id",
                 "type": "string",
                 "title": "Data object id",
                 "default": "",
                 "examples": [
                   "23053239-7068-4a37-8033-bd125d1cb30d"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "description": {
-                "$id": "#/properties/data/properties/imagery/items/properties/description",
+                "id": "#/properties/data/properties/imagery/items/properties/description",
                 "type": "string",
                 "title": "Data object description",
                 "default": "",
                 "examples": [
                   "Algorithm accuracy plot"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "url": {
-                "$id": "#/properties/data/properties/imagery/items/properties/url",
+                "id": "#/properties/data/properties/imagery/items/properties/url",
                 "type": "string",
                 "title": "Data object URL",
                 "default": "",
                 "examples": [
                   "./data/PARCELAS_AGRICOLAS_MORENA_IGOR/ZIP_PATH_FOR_FILE"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               },
               "status": {
-                "$id": "#/properties/data/properties/imagery/items/properties/status",
+                "id": "#/properties/data/properties/imagery/items/properties/status",
                 "type": "string",
                 "title": "Data Object status",
                 "default": "",
@@ -462,7 +448,7 @@
                   "pending",
                   "local"
                 ],
-                "pattern": "^(.*)$"
+                "pattern": "^(.*)"
               }
             }
           }

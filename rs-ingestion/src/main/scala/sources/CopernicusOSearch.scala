@@ -50,7 +50,7 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     val doc = Json.parse(docJson)
     var workToBeDone = List[Work]()
 
-        getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
+//    getNextPagesWork(doc).foreach(w => workToBeDone ::= w)
 
     val entriesOpt = Try((doc \ "feed" \ "entry").as[List[JsObject]])
     entriesOpt match {
@@ -83,7 +83,6 @@ class CopernicusOSearchWork(override val source: CopernicusOSearchSource,
     )
 
   }
-
 
 
   override def getNextPagesWork(doc: JsValue): Option[Work] = {

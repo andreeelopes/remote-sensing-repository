@@ -5,7 +5,9 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.json.JSONObject;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pt.unl.fct.model.CustomMetadata;
@@ -13,6 +15,7 @@ import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
 
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 
 public interface ProductsApi {
@@ -38,6 +41,20 @@ public interface ProductsApi {
             produces = {"application/json"},
             method = RequestMethod.GET)
     Object getProduct(String productId);
+
+
+    @ApiOperation(value = "Get product data", nickname = "getProductData", notes = "Downloads the product data", response = ResponseEntity.class, tags = {"products-controller",})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful operation", response = ResponseEntity.class),
+            @ApiResponse(code = 404, message = "Product data with id <id> does not exist"),
+            @ApiResponse(code = 404, message = "Product with id <id> does not exist")
+    })
+    @RequestMapping(value = "/products/{productId}/data/{dataId}",
+            produces = {"application/octet-stream"},
+            method = RequestMethod.GET)
+    ResponseEntity<Resource> getProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") String productId,
+                                            @ApiParam(value = "ID of the data to be deleted", required = true) @PathVariable("dataId") String dataId) throws IOException;
+
 
     @ApiOperation(value = "Fetch data object of the given product", nickname = "fetchProductData", notes = "Check the progress in the status field", tags = {"products-controller",})
     @ApiResponses(value = {
@@ -89,7 +106,7 @@ public interface ProductsApi {
             @ApiResponse(code = 404, message = "Product or data not found")})
     @RequestMapping(value = "/products/{productId}/data/{dataId}",
             method = RequestMethod.DELETE)
-    void deleteProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") Long productId,
-                           @ApiParam(value = "ID of the data to be deleted", required = true) @PathVariable("dataId") Long dataID);
+    void deleteProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") String productId,
+                           @ApiParam(value = "ID of the data to be deleted", required = true) @PathVariable("dataId") String dataId);
 
 }

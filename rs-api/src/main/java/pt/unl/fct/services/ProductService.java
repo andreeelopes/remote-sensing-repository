@@ -132,4 +132,7 @@ public class ProductService {
     }
 
 
+    public String getProductDataLocation(String productId, String dataId) {
+        return "./scripts/wait-for-it.sh";
+    }
 }

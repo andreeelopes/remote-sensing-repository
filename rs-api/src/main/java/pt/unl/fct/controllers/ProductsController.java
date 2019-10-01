@@ -7,8 +7,14 @@ import net.lingala.zip4j.exception.ZipException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pt.unl.fct.api.ProductsApi;
@@ -27,7 +33,11 @@ import pt.unl.fct.utils.Utils;
 import javax.validation.Valid;
 import javax.validation.constraints.Null;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -42,6 +52,35 @@ public class ProductsController implements ProductsApi {
     @Override
     public Object getProduct(@ApiParam(value = "Product ID", required = true) @PathVariable("productId") String productId) {
         return productService.getProduct(productId);
+    }
+
+    @Override
+    public ResponseEntity<Resource> getProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") String productId,
+                                                   @ApiParam(value = "ID of the data object", required = true) @PathVariable("dataId") String dataId) throws IOException {
+
+
+//        productService.getProduct(productId); //tests if product exists
+
+        String productDataLocation = productService.getProductDataLocation(productId, dataId); //checks if product data exists
+        String[] splitPath = productDataLocation.split("/");
+        String filename = splitPath[splitPath.length - 1];
+
+        File file = new File(productDataLocation);
+
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
     }
 
     @Override
@@ -93,9 +132,10 @@ public class ProductsController implements ProductsApi {
         productService.updateProduct(customMetadata);
     }
 
-    @Override
-    public void deleteProductData(Long productId, Long dataID) {
 
+    @Override
+    public void deleteProductData(String productId, String dataId) {
+        //TODO
     }
 
     @Override
