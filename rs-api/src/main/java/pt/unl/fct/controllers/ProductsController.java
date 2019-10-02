@@ -59,8 +59,6 @@ public class ProductsController implements ProductsApi {
                                                    @ApiParam(value = "ID of the data object", required = true) @PathVariable("dataId") String dataId) throws IOException {
 
 
-//        productService.getProduct(productId); //tests if product exists
-
         String productDataLocation = productService.getProductDataLocation(productId, dataId); //checks if product data exists
         String[] splitPath = productDataLocation.split("/");
         String filename = splitPath[splitPath.length - 1];

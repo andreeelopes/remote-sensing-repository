@@ -1,5 +1,6 @@
 package pt.unl.fct.services;
 
+import org.bson.BsonArray;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +24,7 @@ import pt.unl.fct.model.FetchData;
 import pt.unl.fct.model.Product;
 import pt.unl.fct.model.SchemaJson;
 import pt.unl.fct.utils.Utils;
+import springfox.documentation.spring.web.json.Json;
 
 import java.io.IOException;
 import java.util.List;
@@ -133,6 +135,39 @@ public class ProductService {
 
 
     public String getProductDataLocation(String productId, String dataId) {
-        return "./scripts/wait-for-it.sh";
+
+        JSONObject product = new JSONObject(Utils.g.toJson(getProduct(productId)));
+
+        JSONArray imagery = product.getJSONObject("data").getJSONArray("imagery");
+        JSONArray metadata = product.getJSONObject("data").getJSONArray("metadata");
+
+        String imageryUrl = getProductDataUrl(imagery, dataId);
+        String metadataUrl = getProductDataUrl(metadata, dataId);
+
+        if (imageryUrl == null && metadataUrl == null) {
+            throw new NotFoundException("Product data with id " + dataId + " does not exist");
+        } else if (imageryUrl == null) {
+            return metadataUrl;
+        } else {
+            return imageryUrl;
+        }
     }
+
+
+    private String getProductDataUrl(JSONArray arr, String dataId) {
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject elem = arr.getJSONObject(i);
+
+            if (elem.getString("_id").equals(dataId)) {
+                String status = elem.getString("status");
+                if (status.equals("local")) {
+                    return elem.getString("url");
+                } else
+                    throw new NotFoundException("Product data is not in the infraestructure");
+            }
+        }
+        return null;
+    }
+
+
 }

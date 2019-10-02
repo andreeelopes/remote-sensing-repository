@@ -47,6 +47,7 @@ public interface ProductsApi {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful operation", response = ResponseEntity.class),
             @ApiResponse(code = 404, message = "Product data with id <id> does not exist"),
+            @ApiResponse(code = 404, message = "Product data is not in the infraestructure"),
             @ApiResponse(code = 404, message = "Product with id <id> does not exist")
     })
     @RequestMapping(value = "/products/{productId}/data/{dataId}",
