@@ -12,13 +12,23 @@ import java.util.List;
 
 public interface SchemaApi {
 
-    @ApiOperation(value = "Get the metamodel of each one of the products", nickname = "getSchema", notes = "Returns an array of json schemas describing the metamodel", response = List.class, tags = {"schema-controller",})
+    @ApiOperation(value = "Get the metamodel of each one of the product's type", nickname = "getSchemas", notes = "Returns an array of json schemas describing the metamodel", response = List.class, tags = {"schema-controller",})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful operation", response = Object.class),})
     @RequestMapping(value = "/schema",
             produces = {"application/json"},
             method = RequestMethod.GET)
-    List<Object> getSchema();
+    List<Object> getSchemas();
+
+    @ApiOperation(value = "Get the metamodel of the given product type", nickname = "getSchema", notes = "Returns the schema of the given product type", response = Object.class, tags = {"schema-controller",})
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful operation", response = Object.class),
+            @ApiResponse(code = 404, message = "Schema of the given product type does not exist"),
+    })
+    @RequestMapping(value = "/schema/{productType}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    Object getSchema(String productType);
 
     @ApiOperation(value = "Add schema of new product", nickname = "addSchema", notes = "", tags = {"schema-controller",})
     @ApiResponses(value = {

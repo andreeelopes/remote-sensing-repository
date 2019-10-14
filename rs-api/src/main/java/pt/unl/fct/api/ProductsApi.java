@@ -91,6 +91,7 @@ public interface ProductsApi {
             @ApiResponse(code = 200, message = "Product updated successfully"),
             @ApiResponse(code = 404, message = "Product does not exist"),
             @ApiResponse(code = 400, message = "Custom metadata is not defined in the product schema"),
+            @ApiResponse(code = 404, message = "Extension does not exist"),
             @ApiResponse(code = 400, message = "Product schema is not defined"),
             @ApiResponse(code = 400, message = "The given value has the wrong type"),
             @ApiResponse(code = 400, message = "Request parameter and body do not match")

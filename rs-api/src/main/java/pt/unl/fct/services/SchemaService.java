@@ -38,15 +38,19 @@ public class SchemaService {
         return mongoTemplate.find(query, Object.class, INDEXES_COL);
     }
 
-    public List<Object> getSchema() {
+    public List<Object> getSchemas() {
         return mongoTemplate.findAll(Object.class, SCHEMA_COL);
     }
 
     public Object getSchema(String productType) {
         Query query = new Query();
         query.addCriteria(Criteria.where("_id").is(productType));
+        Object schemaObj = mongoTemplate.findOne(query, Object.class, SCHEMA_COL);
 
-        return mongoTemplate.findOne(query, Object.class, SCHEMA_COL);
+        if (schemaObj == null)
+            throw new BadRequestException("Schema of the given product type does not exist");
+        else
+            return schemaObj;
     }
 
     public void addSchema(SchemaJson schema) {

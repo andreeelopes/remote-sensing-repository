@@ -69,9 +69,35 @@ public class ProductService {
     }
 
 
-    public void addProduct(JSONObject metadata) {
-        Document doc = Document.parse(metadata.toString());
+    public void addProduct(JSONObject mdDoc) {
+        String productId = mdDoc.getString("_id");
+
+        JSONObject dataObj = mdDoc.getJSONObject("data");
+        JSONArray imageryObj = dataObj.getJSONArray("imagery");
+        JSONArray metadataObj = dataObj.getJSONArray("metadata");
+
+        dataObj.put("imagery", updateEntryUrl(imageryObj, productId));
+        dataObj.put("metadata", updateEntryUrl(metadataObj, productId));
+        mdDoc.put("data", dataObj);
+
+        Document doc = Document.parse(mdDoc.toString());
         mongoTemplate.insert(doc, PRODUCTS_MD_COL);
+    }
+
+    private JSONArray updateEntryUrl(JSONArray arr, String productId) {
+        int initialSize = arr.length();
+
+        for (int i = 0; i < initialSize; i++) {
+            JSONObject entry = arr.getJSONObject(i);
+            String url = entry.getString("url");
+            entry.put("url", Utils.BASE_DIR + "/" + productId + "/" + url);
+
+            arr.put(entry);
+        }
+        for (int i = 0; i < initialSize; i++) // remove old entries
+            arr.remove(i);
+
+        return arr;
     }
 
     public void updateProduct(CustomMetadata customMetadata) {
@@ -87,16 +113,25 @@ public class ProductService {
             throw new BadRequestException("Custom metadata is not defined in the product schema");
         }
 
-        JSONObject customField = new JSONObject(Utils.g.toJson(schemaObj))
-                .getJSONObject("schema")
-                .getJSONObject("properties")
-                .getJSONObject("custom")
-                .getJSONObject("properties")
-                .getJSONObject(customMetadata.getFieldName());
 
-        String type = customField.getString("type");
+        JSONObject custom = null;
+        String type = null;
+        try {
+            JSONObject customField = new JSONObject(Utils.g.toJson(schemaObj))
+                    .getJSONObject("schema")
+                    .getJSONObject("properties")
+                    .getJSONObject("custom")
+                    .getJSONObject("properties")
+                    .getJSONObject(customMetadata.getFieldName());
 
-        JSONObject custom = product.getJSONObject("custom");
+            type = customField.getString("type");
+
+            custom = product.getJSONObject("custom");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new NotFoundException("Extension does not exist");
+        }
+
 
         try {
             switch (type) {

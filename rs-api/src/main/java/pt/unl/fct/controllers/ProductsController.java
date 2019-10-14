@@ -58,12 +58,12 @@ public class ProductsController implements ProductsApi {
     public ResponseEntity<Resource> getProductData(@ApiParam(value = "ID of the product", required = true) @PathVariable("productId") String productId,
                                                    @ApiParam(value = "ID of the data object", required = true) @PathVariable("dataId") String dataId) throws IOException {
 
-
         String productDataLocation = productService.getProductDataLocation(productId, dataId); //checks if product data exists
         String[] splitPath = productDataLocation.split("/");
         String filename = splitPath[splitPath.length - 1];
 
         File file = new File(productDataLocation);
+
 
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));

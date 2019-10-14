@@ -31,8 +31,13 @@ public class SchemaController implements SchemaApi {
 
 
     @Override
-    public List<Object> getSchema() {
-        return schemaService.getSchema();
+    public List<Object> getSchemas() {
+        return schemaService.getSchemas();
+    }
+
+    @Override
+    public Object getSchema(@ApiParam(value = "Product Type", required = true) @PathVariable("productType") String productType) {
+        return schemaService.getSchema(productType);
     }
 
 

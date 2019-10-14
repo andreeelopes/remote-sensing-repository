@@ -30,8 +30,7 @@ public final class Utils {
     private static String RS_ENGINE_ENDPOINT_IP = Utils.getEnvVariable("RS_ENGINE_ENDPOINT_IP", "127.0.0.1");
     private static String RS_ENGINE_ENDPOINT_PORT = Utils.getEnvVariable("RS_ENGINE_ENDPOINT_PORT", "8081");
     private static String WORK_REST_ENDPOINT = "http://" + RS_ENGINE_ENDPOINT_IP + ":" + RS_ENGINE_ENDPOINT_PORT + "/work";
-    public static String BASE_DIR = Utils.getEnvVariable("BASE_DIR", "C:\\\\Users\\\\andre\\\\Downloads\\\\data");
-    //TODO
+    public static String BASE_DIR = Utils.getEnvVariable("BASE_DIR", "data");
 
 
     private static String getEnvVariable(String envVarName, String defaultValue) {
