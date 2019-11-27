@@ -1,0 +1,513 @@
+{
+  "_id": "PA_MORENA_VILA_FRANCA_DE_XIRA",
+  "program": "MORENA",
+  "platform": "Igor Ruivo",
+  "productType": "PARCELAS_AGRICOLAS_MORENA_IGOR",
+  "provider": "DI@FCT-UNL",
+  "title": "Parcelas Agr�colas computadas por Igor Ruivo no programa MORENA da regi�o de Vila Franca de Xira",
+  "custom": {
+    
+  },
+  "imageryProjection": "EPSG:32629",
+  "footprint": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -8.943896799300171,
+          39.02716374448494
+        ],
+        [
+          -8.839980981214406,
+          39.027067482800504
+        ],
+        [
+          -8.840152263013513,
+          38.9509543950306
+        ],
+        [
+          -8.943956851542593,
+          38.951050397256246
+        ],
+        [
+          -8.943896799300171,
+          39.02716374448494
+        ]
+      ]
+    ]
+  },
+  "acquisitionDateStart": "2018-01-01T00:00:00.000Z",
+  "acquisitionDayOfYearStart": 1,
+  "acquisitionDateEnd": "2018-12-31T23:59:59.999Z",
+  "acquisitionDayOfYearEnd": 365,
+  "globalAccuracy": 69.83794525737896,
+  "globalProducerAccuracy": 78.29863965516009,
+  "globalUserAccuracy": 89.6862557276737,
+  "parcelsAverageArea": 138356.23084219676,
+  "parcelsAveragePerimeter": 1892.3893832880751,
+  "parcelsMaximumArea": 965157.2243431405,
+  "parcelsMaximumPerimeter": 6366.152616103725,
+  "parcelsMinimumArea": 13708.641721069813,
+  "parcelsMinimumPerimeter": 563.502436371111,
+  "parcelsCount": 412,
+  "parameters": {
+    "threshold": 35,
+    "minArea": 10000,
+    "buffer": 5,
+    "useCOS": 1,
+    "processedProducts": [
+      {
+        "_id": "S2A_MSIL1C_20180120T112401_N0206_R037_T29SND_20180120T150034.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180130T112311_N0206_R037_T29SND_20180130T133625.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180219T112111_N0206_R037_T29SND_20180219T133501.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180321T112111_N0206_R037_T29SND_20180321T134033.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180510T112121_N0206_R037_T29SND_20180510T150520.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180619T112111_N0206_R037_T29SND_20180619T132949.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180729T112111_N0206_R037_T29SND_20180729T133441.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180808T112111_N0206_R037_T29SND_20180808T133355.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180818T112111_N0206_R037_T29SND_20180818T135647.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180917T112111_N0206_R037_T29SND_20180917T114424.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20180927T112111_N0206_R037_T29SND_20180927T114442.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20181007T112111_N0206_R037_T29SND_20181007T133341.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20181027T112151_N0206_R037_T29SND_20181027T114945.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20181116T112331_N0207_R037_T29SND_20181116T115104.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20181206T112431_N0207_R037_T29SND_20181206T115446.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2A_MSIL1C_20181216T112451_N0207_R037_T29SND_20181216T114651.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180115T112419_N0206_R037_T29SND_20180115T133323.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180204T112249_N0206_R037_T29SND_20180204T132350.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180224T112109_N0206_R037_T29SND_20180224T164834.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180326T112109_N0206_R037_T29SND_20180326T132716.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180405T112109_N0206_R037_T29SND_20180405T132445.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180425T112109_N0206_R037_T29SND_20180425T165150.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180505T112109_N0206_R037_T29SND_20180505T135659.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180515T112109_N0206_R037_T29SND_20180515T135621.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180614T112109_N0206_R037_T29SND_20180614T164706.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180624T112109_N0206_R037_T29SND_20180624T132741.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180803T112109_N0206_R037_T29SND_20180803T152545.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180823T112109_N0206_R037_T29SND_20180823T152254.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180902T112109_N0206_R037_T29SND_20180902T140408.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180912T112109_N0206_R037_T29SND_20180912T184030.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20180922T112109_N0206_R037_T29SND_20180922T151938.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181002T112109_N0206_R037_T29SND_20181002T150612.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181012T112109_N0206_R037_T29SND_20181012T151546.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181022T112119_N0206_R037_T29SND_20181022T151431.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181101T112219_N0206_R037_T29SND_20181104T043617.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181121T112349_N0207_R037_T29SND_20181121T161726.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      },
+      {
+        "_id": "S2B_MSIL1C_20181231T112459_N0207_R037_T29SND_20181231T114603.SAFE",
+        "bands": [
+          "B03",
+          "B04",
+          "B08",
+          "TCI"
+        ],
+        "granuleId": "T29SND"
+      }
+    ],
+    "referenceData": {
+      "_id": "parcelas.2018jun10",
+      "description": "Reference data provided by IFAP, via WFS, in 2018.",
+      "resolution": {
+        "x": 10,
+        "y": 10
+      }
+    }
+  },
+  "data": {
+    "imagery": [
+      {
+        "_id": "crops_shp",
+        "description": "Shape format; the feature geometry itself.",
+        "url": "crops.shp",
+        "resolution": {
+          "x": 10,
+          "y": 10
+        },
+        "format": "SHP",
+        "status": "local",
+        "fileName": "crops.shp"
+      },
+      {
+        "_id": "crops_shx",
+        "description": "Shape index format; a positional index of the feature geometry to allow seeking forwards and backwards quickly.",
+        "url": "crops.shx",
+        "resolution": {
+          "x": 10,
+          "y": 10
+        },
+        "format": "SHX",
+        "status": "local",
+        "fileName": "crops.shx"
+      },
+      {
+        "_id": "crops_dbf",
+        "description": "Attribute format; columnar attributes for each shape, in dBase IV format.",
+        "url": "crops.dbf",
+        "resolution": {
+          "x": 10,
+          "y": 10
+        },
+        "format": "DBF",
+        "status": "local",
+        "fileName": "crops.dbf"
+      },
+      {
+        "_id": "crops_prj",
+        "description": "Projection description, using a well-known text representation of coordinate reference systems.",
+        "url": "crops.prj",
+        "resolution": {
+          "x": 10,
+          "y": 10
+        },
+        "format": "PRJ",
+        "status": "local",
+        "fileName": "crops.prj"
+      },
+      {
+        "_id": "crops_tif",
+        "description": "TIF image rasterized from the original shapefile. Each individual parcel has a colour mapped from it's internal id.",
+        "url": "crops.tif",
+        "resolution": {
+          "x": 10,
+          "y": 10
+        },
+        "format": "TIF",
+        "status": "local",
+        "fileName": "crops.tif"
+      }
+    ],
+    "metadata": [
+      {
+        "_id": "crops_json",
+        "description": "Confusion matrix containing the results obtained from the comparison with the reference data considered.",
+        "url": "confusion_matrix.json",
+        "format": "JSON",
+        "status": "local",
+        "fileName": "crops.json"
+      }
+    ]
+  }
+}

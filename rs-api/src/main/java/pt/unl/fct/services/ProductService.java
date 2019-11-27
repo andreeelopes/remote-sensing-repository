@@ -1,7 +1,10 @@
 package pt.unl.fct.services;
 
 import org.bson.BsonArray;
+import org.bson.BsonDateTime;
+import org.bson.BsonDocument;
 import org.bson.Document;
+import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,12 +79,24 @@ public class ProductService {
         JSONArray imageryObj = dataObj.getJSONArray("imagery");
         JSONArray metadataObj = dataObj.getJSONArray("metadata");
 
+
         dataObj.put("imagery", updateEntryUrl(imageryObj, productId));
         dataObj.put("metadata", updateEntryUrl(metadataObj, productId));
         mdDoc.put("data", dataObj);
 
-        Document doc = Document.parse(mdDoc.toString());
-        mongoTemplate.insert(doc, PRODUCTS_MD_COL);
+        //change date format
+        DateTime dateStart = DateTime.parse(mdDoc.getString("acquisitionDateStart"));
+        DateTime dateEnd = DateTime.parse(mdDoc.getString("acquisitionDateEnd"));
+
+        BsonDocument doc = BsonDocument.parse(mdDoc.toString());
+
+        doc.remove("acquisitionDateStart");
+        doc.remove("acquisitionDateEnd");
+
+        doc.put("acquisitionDateStart", new BsonDateTime(dateStart.getMillis()));
+        doc.put("acquisitionDateEnd", new BsonDateTime(dateEnd.getMillis()));
+
+        mongoTemplate.insert(doc.toJson(), PRODUCTS_MD_COL);
     }
 
     private JSONArray updateEntryUrl(JSONArray arr, String productId) {
