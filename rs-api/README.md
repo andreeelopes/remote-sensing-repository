@@ -1,23 +1,6 @@
+# API REST - Spring
 
- Instalação de software/pacotes
-- Organização dos dados em pastas (onde deverão estar os ficheiros, os nomes dos mesmos, etc).
-- Instruções para compilação/utilização
-
-
-dentro da API
-- estrutura das pastas
-- onde está a doc - site
-- endpoints
-- como correr sem ser com o docker, build para gerar imagem
-- TODO
-- instructions to add igor products
-
-dentro da ingestão
-- estrutura das pastas
-- onde está a doc
-- como correr sem ser com o docker, build para gerar imagem
-- TODO
-- instructions to add igor products
+## Organização das Pastas
 
 
 ````
@@ -39,4 +22,41 @@ dentro da ingestão
 |   +-- members.yml
 +-- _site
 +-- index.html
+
+````
+
+
+## Compilação
+
+Para correr localmente:
+
 ```
+mvn spring-boot:run
+```
+
+Para gerar a imagem Docker:
+
+```
+mvn install
+```
+
+Para publicar a imagem Docker no Docker Hub (podendo-se aceder à mesma em qualquer máquina):
+
+```
+mvn publish
+```
+
+## Utilização
+
+A API está documentada através do Swagger. Portanto existe um endpoint no qual é disponibilizada uma página na qual é possível testar a API:
+
+```
+http://<ip>:<port>/swagger-ui.html
+```
+### Exemplo
+
+ADD PRODUTOS DO IGOR 
+
+
+
+## TO DO
