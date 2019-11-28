@@ -1,26 +1,8 @@
+# Sistema de Ingestão - Akka
 
- Instalação de software/pacotes
-- Organização dos dados em pastas (onde deverão estar os ficheiros, os nomes dos mesmos, etc).
-- Instruções para compilação/utilização
+## Organização das Pastas
 
-
-dentro da API
-- estrutura das pastas
-- onde está a doc - site
-- endpoints
-- como correr sem ser com o docker, build para gerar imagem
-- TODO
-- instructions to add igor products
-
-dentro da ingestão
-- estrutura das pastas
-- onde está a doc
-- como correr sem ser com o docker, build para gerar imagem
-- TODO
-- instructions to add igor products
-
-
-````
+```
 .
 +-- _config.yml
 +-- _drafts
@@ -40,3 +22,28 @@ dentro da ingestão
 +-- _site
 +-- index.html
 ```
+
+
+## Compilação
+
+Para correr localmente:
+
+```
+sbt run
+```
+
+Para gerar a imagem Docker:
+
+```
+sbt docker:publishLocal
+```
+
+Para publicar a imagem Docker no Docker Hub (podendo-se aceder à mesma em qualquer máquina):
+
+```
+sbt docker:publish
+```
+
+## TO DO
+
+
