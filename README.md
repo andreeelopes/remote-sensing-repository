@@ -23,15 +23,15 @@ computação. Tendo-se concluído que a abordagem proposta não oferece tantas g
 escalabilidade, mas, na perspetiva da catalogação, a presença de uma gestão colaborativa dos
 produtos e dos seus metamodelos é uma grande vantagem face às outras soluções.
 
-##Arquitetura
+## Arquitetura
 
-![Image of Yaktocat](https://drive.google.com/uc?id=127DAMerFBggWD6QbpDP7CYeaFtip53ER)
+[Diagrama](https://drive.google.com/uc?id=127DAMerFBggWD6QbpDP7CYeaFtip53ER)
 
 O projeto git está divido em dois principais módulos: ingestão e api (API REST).
 
-<u><b> Para mais informações relativas aos submódulos, consultar o README presente em cada um deles. </u></b> 
+**Para mais informações relativas aos submódulos, consultar o README presente em cada um deles.**
 
-## Instalação e <em> Deployment </em>
+## Instalação e Deployment
 
 Toda a arquitetura está dockerizada.
 
@@ -43,11 +43,10 @@ Na instalação importa ir para a raíz do projeto, na qual está presente o doc
 docker-compose --compatibility up
 ```
 
-Sendo que a infraestrutura de containers criada será a correspondente à seguinte imagem:
+Sendo que a infraestrutura de containers criada será a correspondente à seguinte [imagem](https://drive.google.com/uc?id=1MN4Mu2cd4h4aMwi8y9ER5dVjMaVNS05F).
 
-![Image of Yaktocat](https://drive.google.com/uc?id=1MN4Mu2cd4h4aMwi8y9ER5dVjMaVNS05F)
 
-### <em> Deploy </em>  distribuído
+### Deploy distribuído
 
 Alternativamente, é possível executar toda a infraestrutura de uma forma distribuída através do Docker Swarm:
 
