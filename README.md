@@ -39,6 +39,7 @@ Portanto para instalar toda esta aplicação basta ter o docker (e o docker-comp
 
 Na instalação importa ir para a raíz do projeto, na qual está presente o docker-compose.yml e executar o seguinte comando:
 
+
 ```
 docker-compose --compatibility up
 ```
@@ -52,18 +53,23 @@ Alternativamente, é possível executar toda a infraestrutura de uma forma distr
 
 Iniciar o cluster (sendo que depois será gerado o comando através do qual outras máquinas se podem juntar a este cluster):
 
+
 ```
 docker swarm init
 ```
 
+
 Deploy da aplicação:
+
 
 ```
 docker stack deploy --compose-file docker-compose.yml cluster_rs
 docker stack services cluster_rs
 ```
 
+
 Consultar serviços:
+
 
 ```
 docker service ps cluster_rs_worker
@@ -71,4 +77,11 @@ docker service ps cluster_rs_worker
 
 NOTA: o deploy distribuído em várias máquinas não foi testado devidamente 
 
+## Utilização
 
+A API está documentada através do Swagger. Portanto existe um endpoint no qual é disponibilizada uma página na qual é possível testar a API:
+
+
+```
+http://<ip>:<port>/swagger-ui.html
+```
