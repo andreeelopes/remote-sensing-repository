@@ -4,23 +4,45 @@
 
 ```
 .
-+-- _config.yml
-+-- _drafts
-|   +-- begin-with-the-crazy-ideas.textile
-|   +-- on-simplicity-in-technology.markdown
-+-- _includes
-|   +-- footer.html
-|   +-- header.html
-+-- _layouts
-|   +-- default.html
-|   +-- post.html
-+-- _posts
-|   +-- 2007-10-29-why-every-programmer-should-play-nethack.textile
-|   +-- 2009-04-26-barcamp-boston-4-roundup.textile
-+-- _data
-|   +-- members.yml
-+-- _site
-+-- index.html
+|   .gitignore
+|   build.sbt    # Configuração de dependências
+|   README.md
+|
++---data	# Dados (imagens e metadados) armazenados nesta pasta
+|
++---logs
+|
++---project
+|
++---scripts
+|       wait-for-it.sh	# script usado para deploy através do Docker
+|
++---src
+|   \---main
+|       +---resources
+|       |       application.conf	# Toda a configuração das fontes, extrações, metamodelos e infraestrutura
+|       |       logback.xml			# Configuração dos logs
+|       |
+|       \---scala
+|           |   Main.scala
+|           |
+|           +---api		# Endpoint de interação entre a componente da interface e a de ingestão
+|			|
+|           +---mongo	# Adaptador para MongoDB
+|           |
+|           \---protocol	# Protocolo de ingestão distribuída (Akka)
+|           |   +---master
+|           |   |
+|           |   +---scheduler
+|           |   |
+|           |   \---worker
+|           |
+|           +---sources		# Definição das fontes e extrações
+|           |   |
+|           |   \---handlers	# Handlers de parsing, transformações e de erros
+|           |
+|           \---utils
+
 ```
 
 
@@ -43,7 +65,5 @@ Para publicar a imagem Docker no Docker Hub (podendo-se aceder à mesma em qualq
 ```
 sbt docker:publish
 ```
-
-## TO DO
 
 

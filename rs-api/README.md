@@ -5,23 +5,50 @@
 
 ````
 .
-+-- _config.yml
-+-- _drafts
-|   +-- begin-with-the-crazy-ideas.textile
-|   +-- on-simplicity-in-technology.markdown
-+-- _includes
-|   +-- footer.html
-|   +-- header.html
-+-- _layouts
-|   +-- default.html
-|   +-- post.html
-+-- _posts
-|   +-- 2007-10-29-why-every-programmer-should-play-nethack.textile
-|   +-- 2009-04-26-barcamp-boston-4-roundup.textile
-+-- _data
-|   +-- members.yml
-+-- _site
-+-- index.html
+|   .gitignore
+|   Dockerfile     # Especificação da imagem Docker
+|   pom.xml     # Configuração de dependências
+|   README.md
+|
++---data        # Dados (imagens e metadados) armazenados nesta pasta
+|
++---logs
+|
++---products    # Esquema e dois produtos da deteção de parcelas agrícolas (para testar API)
+|   |   schema.json
+|   |
+|   +---LEZIRIA_PARCELS
+|   |
+|   \---VILA_FRANCA_DE_XIRA_PARCELS
+|
++---scripts
+|       wait-for-it.sh      # script usado para deploy através do Docker
+|
++---src
+|   +---main
+|   |   +---java
+|   |   |   \---pt
+|   |   |       \---unl
+|   |   |           \---fct
+|   |   |               |   RSApiApplication.java
+|   |   |               |
+|   |   |               +---api         # Documentação do Swagger
+|   |   |               |
+|   |   |               +---conf        # Configuração do Swagger
+|   |   |               |
+|   |   |               +---controllers
+|   |   |               |
+|   |   |               +---errors
+|   |   |               |
+|   |   |               +---model
+|   |   |               |
+|   |   |               +---services
+|   |   |               |
+|   |   |               \---utils
+|   |   |
+|   |   \---resources
+|   |           application.properties      # Inclui configuração do MongoDB
+|   |           logback-spring.xml          #  Configuração dos logs
 
 ````
 
@@ -55,8 +82,12 @@ http://<ip>:<port>/swagger-ui.html
 ```
 ### Exemplo
 
-ADD PRODUTOS DO IGOR 
+1. ``POST /metamodels`` 
 
+"schema" -> ``products/schema.json``
 
+2. ``POST /products`` 
 
-## TO DO
+"metadata" -> ``products/metamodel.json``
+
+"file" -> ``LEZIRIA_PARCELS/LEZIRIA_PARCELS.zip``
